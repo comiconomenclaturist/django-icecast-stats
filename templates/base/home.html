@@ -1,0 +1,446 @@
+{% extends 'base/index.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<style>
+	.container {
+		display: flex;
+		flex-wrap: wrap;
+	}
+	.container .cell {
+		width: 33%;
+	}
+	.container .cell > div {
+		margin: 10px;
+		background-color: rgb(40, 40, 40);
+	}
+	@media only screen and (max-width: 1280px) {
+		.container .cell {
+			width: 50%;
+		}
+	}
+	@media only screen and (max-width: 720px) {
+		.container .cell {
+			width: 100%;
+		}
+	}
+	.minuteselect {
+		display: none;
+	}
+	.daterangepicker {
+		background-color: #666 !important;
+		border-color: #000 !important;
+		font: inherit !important;
+	}
+	.daterangepicker .cancelBtn {
+		display: none;
+	}
+	.daterangepicker .applyBtn {
+		font: inherit !important;
+		text-transform: uppercase;
+		font-weight: bold !important;
+		border: solid 1px #444;
+	}
+	.calendar-table {
+		background-color: #333 !important;
+		border-color: #222 !important;
+	}
+	.daterangepicker .in-range {
+		background-color: orange !important;
+	}
+	.daterangepicker .off.ends {
+		background-color: #444 !important;
+	}
+	.daterangepicker .disabled {
+		background-color: #222 !important;
+	}
+	.daterangepicker td.available:hover, .daterangepicker th.available:hover {
+		background-color: #777 !important;
+	}
+
+</style>
+<script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+<script src="{% static 'js/moment.js' %}"></script>
+<script src="{% static 'js/chart.js@2.8.0' %}"></script>
+<script src="{% static 'libs/daterangepicker/daterangepicker.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'libs/daterangepicker/daterangepicker.css' %}">
+
+<div>
+	<form method="GET" action="/">
+		{{ form }}
+	</form>
+	<br>
+</div>
+
+<div class="container">
+	<div class="cell">
+		<div><canvas id="listenerCount"></canvas></div>
+	</div>
+	<div class="cell">
+		<div><canvas id="listenerHours"></canvas></div>
+	</div>
+	<div class="cell">
+		<div><canvas id="browser"></canvas></div>
+	</div>
+	<div class="cell">
+		<div><canvas id="countries"></canvas></div>
+	</div>
+	<div class="cell">
+		<div><canvas id="referer"></canvas></div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	var period = '{{request.GET.period}}' || '{{min_date}}' + ' - ' + '{{max_date}}';
+	var station = '{{request.GET.station}}';
+	var start = period.split(' - ')[0];
+	var end = period.split(' - ')[1];
+
+	$('#id_period').daterangepicker({
+		showDropdowns: true,
+		maxSpan: {
+			"years": 10,
+		},
+		timePicker: true,
+		timePickerIncrement: 60,
+		locale: {
+			format: 'YYYY/MM/DD hA'
+		},
+		startDate: period.split(' - ')[0],
+		endDate: period.split(' - ')[1],
+		minDate: '{{min_date}}',
+		maxDate: '{{max_date}}',
+	});
+
+	Chart.defaults.global.defaultFontColor = 'lightgrey';
+	Chart.defaults.global.legend.position = 'right';
+	Chart.defaults.global.legend.labels.boxWidth = 10;
+	Chart.defaults.global.legend.labels.fontSize = 10;
+	Chart.defaults.global.title.display = true;
+	Chart.defaults.global.title.fontStyle = 'normal';
+	Chart.defaults.global.title.fontSize = 14;
+
+	var colours = ['#FF4E67', '#F77D50', '#EFBD52', '#DAE753', '#9ADF55', '#62D856', '#58D07E', '#59C9AB', '#5AB3C1']
+	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
+	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
+	var listenerCountChart = null;
+	var listenerHoursChart = null;
+
+	var browserId = document.getElementById('browser').getContext('2d');
+	var browserChart = new Chart(browserId, {
+		type: 'doughnut',
+		data: {
+			datasets: [{
+				data: [],
+				backgroundColor: colours,
+				borderColor: colours,
+			}],
+			labels: []
+		},
+		options: {
+			title: {
+				text: 'Browser',
+			},
+		}
+	});
+
+	var countriesId = document.getElementById('countries').getContext('2d');
+	var countriesChart = new Chart(countriesId, {
+		type: 'horizontalBar',
+		data: {
+			datasets: [{
+				data: [],
+				backgroundColor: colours,
+				borderColor: colours,
+			}],
+			labels: []
+		},
+		options: {
+			title: {
+				text: 'Countries',
+			},
+			scales: {
+				xAxes: [{
+					ticks: {
+						beginAtZero: true,
+						userCallback: function(label, index, labels) {
+							if (Math.floor(label) === label) {
+								return label;
+							}
+						},
+					}
+				}]
+			},
+		}
+	});
+
+	var refererId = document.getElementById('referer').getContext('2d');
+	var refererChart = new Chart(refererId, {
+		type: 'horizontalBar',
+		data: {
+			datasets: [{
+				data: [],
+				backgroundColor: colours,
+				borderColor: colours,
+			}],
+			labels: []
+		},
+		options: {
+			title: {
+				text: 'Referer',
+			},
+			scales: {
+				xAxes: [{
+					ticks: {
+						beginAtZero: true,
+						userCallback: function(label, index, labels) {
+							if (Math.floor(label) === label) {
+								return label;
+							}
+						},
+					}
+				}]
+			},
+		}
+	});
+
+	function getBrowsers(data) {
+		$.get('/useragent/browsers/', data, function(json) {
+			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
+			var labels = json.results.slice(0, colours.length).map(function(e) { return e.family });
+			browserChart.data.datasets[0].data = data;
+			browserChart.data.labels = labels;
+			browserChart.update();
+		});
+	}
+
+	function getCountries(data) {
+		$.get('/listener/countries/', data, function(json) {
+			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
+			var labels = [];
+			$.each(json.results.slice(0, colours.length), function(i, result) {
+				label = result.country.code.toUpperCase().replace(
+					/./g, char => String.fromCodePoint(char.charCodeAt(0)+127397)
+					);
+				labels.push(label);
+			});
+			// var labels = json.results.slice(0, colours.length).map(function(e) { return e.country.name });
+			countriesChart.data.datasets[0].data = data;
+			countriesChart.data.labels = labels;
+			countriesChart.update();
+		});
+	}
+
+	function getReferers(data) {
+		$.get('/listener/referer/', data, function(json) {
+			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
+			var labels = json.results.slice(0, colours.length).map(function(e) { return e.referer });
+			refererChart.data.datasets[0].data = data;
+			refererChart.data.labels = labels;
+			refererChart.update();
+		});
+	}
+
+	function updateTitle(chart) {
+		var total = 0;
+
+		$.each(chart.data.datasets, function(e, dataset) {
+			if (chart.isDatasetVisible(e)) {
+				total += dataset.data.map(function(e) {
+					return e.y
+				}).reduce(function(total, num) {
+					return parseFloat(total) + parseFloat(num);
+				})
+			}
+		});
+		var title = chart.options.title.text.split(':')[0] + ': ' + parseFloat(total.toFixed(2));
+		chart.options.title.text = title
+		chart.update();
+	}
+
+	function getAggregates(data) {
+
+		$.get('/listener/aggregate/', data, function(json) {
+			var labels = [];
+			var streams = [];
+			var countDatasets = [];
+			var hoursDatasets = [];
+
+			labels = json.map(function(e) {
+				return new Date(e.period).getHours();
+			});
+
+			streams = json[0].stream.map(function(e) {
+				return e.mountpoint;
+			});
+
+			$.each(streams, function(stream_index, stream) {
+				var count_data = [];
+				var hours_data = [];
+				$.each(json, function(result_index, result) {
+					$.each(result.stream, function(i) {
+						if (result.stream[i].mountpoint === stream) {
+							count_data.push({
+								x: new Date(result.period),
+								y: result.stream[i].count || 0,
+							});
+							hours_data.push({
+								x: new Date(result.period),
+								y: result.stream[i].hours.toFixed(2) || 0,
+							});
+						}
+					});
+				});
+
+				countDatasets.push({
+					label: stream,
+					backgroundColor: colours[stream_index],
+					borderColor: colours[stream_index],
+					data: count_data,
+				});
+				hoursDatasets.push({
+					label: stream,
+					backgroundColor: colours[stream_index],
+					borderColor: colours[stream_index],
+					data: hours_data,
+				});
+			});
+
+			var start = moment(json[0].period).format('YYYY/MM/DD HH');
+			var end = moment(json[json.length-1].period).add('1', 'hours').format('YYYY/MM/DD HH');
+			$('#id_period').data('daterangepicker').setStartDate(start);
+			$('#id_period').data('daterangepicker').setEndDate(end);
+
+			listenerCountChart ? listenerCountChart.destroy() : null;
+			listenerHoursChart ? listenerHoursChart.destroy() : null;
+
+			listenerCountChart = drawChart(listenerCountId, 'Listener count', countDatasets);
+			listenerHoursChart = drawChart(listenerHoursId, 'Listener hours', hoursDatasets);
+			updateTitle(listenerHoursChart);
+			updateTitle(listenerCountChart);
+		});
+	}
+
+	var defaultLegendClickHandler = Chart.defaults.global.legend.onClick;
+
+	var newLegendClickHandler = function (e, legendItem) {
+		defaultLegendClickHandler.call(this, e, legendItem);
+		updateTitle(this.chart);
+	}
+
+	function drawChart(chartId, title, datasets) {
+		var chart = new Chart(chartId, {
+			type: 'bar',
+			data: {
+				datasets: datasets,
+			},
+			options: {
+				title: {
+					text: title,
+				},
+				legend: {
+					onClick: newLegendClickHandler,
+				},
+				tooltips: {
+					mode: 'x',
+				},
+				scales: {
+					xAxes: [{
+						type: 'time',
+						time: {
+							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+						},
+						stacked: true,
+						ticks: {
+							fontSize: 10,
+						},
+						offset: true,
+						gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+					}],
+					yAxes: [{
+						stacked: true,
+						ticks: {
+							fontSize: 10,
+							beginAtZero: true,
+							userCallback: function(label, index, labels) {
+								if (title.includes('count')) {
+									if (Math.floor(label) === label) {
+										return label;
+									}
+								} else {
+									return label;
+								}
+							},
+						},
+						gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+					}]
+				},
+			}
+		});
+		return chart;
+	}
+
+	$(document).ready(function(){
+		getAggregates();
+		getBrowsers();
+		getCountries();
+		getReferers();
+	});
+	$('input[name="period"]').on('apply.daterangepicker', function() {
+		getAggregates({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getBrowsers({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getCountries({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getReferers({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+	});
+	$('select[name="station"]').change(function() {
+		getAggregates({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getBrowsers({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getCountries({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getReferers({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+	});
+
+</script>
+
+{% endblock %}
