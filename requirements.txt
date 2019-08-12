@@ -1,7 +1,8 @@
 certifi==2019.3.9
 chardet==3.0.4
-Django==2.2.2
+Django==2.2.4
 django-countries==5.3.3
+django-filter==1.1.0
 django-rest-framework==0.1.0
 djangorestframework==3.10.0
 geoip2==2.9.0
