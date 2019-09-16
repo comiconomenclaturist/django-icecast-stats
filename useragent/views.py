@@ -11,9 +11,9 @@ from listener.models import Listener
 
 class Browsers(viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
-		station = self.request.query_params.get('station', 'A')
-		end = self.request.query_params.get('end', None)
-		start = self.request.query_params.get('start', None)
+		station = self.request.query_params.get('station') or 'A'
+		end = self.request.query_params.get('end')
+		start = self.request.query_params.get('start')
 
 		if start and end:
 			start = parser.parse(start).astimezone()

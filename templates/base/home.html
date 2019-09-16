@@ -8,15 +8,42 @@
 	.container {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 	}
 	.container .cell {
-		width: 33%;
+		position: relative;
+		width: calc(33% - 10px);
+		margin: 5px;
 	}
-	.container .cell > div {
-		margin: 10px;
+	.container .cell .canvas {
+		padding: 10px;
 		background-color: rgb(40, 40, 40);
 	}
-	@media only screen and (max-width: 1280px) {
+	.container .cell .overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		background-color: rgba(125, 125, 125, 0.5);
+		border-radius: 5px;
+		width: 100%;
+		height: 100%;
+	}
+	.container .cell .overlay .loader {
+		border: 15px solid rgba(0, 0, 0, 0.3);
+		border-top: 15px solid rgba(250, 200, 50, 0.6);
+		border-radius: 50%;
+		width: 100px;
+		height: 100px;
+		margin: auto;
+		position: absolute;
+		top: 0; left: 0; bottom: 0; right: 0;
+		animation: spin 2s linear infinite;
+	}
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+	@media only screen and (max-width: 1200px) {
 		.container .cell {
 			width: 50%;
 		}
@@ -59,6 +86,39 @@
 	.daterangepicker td.available:hover, .daterangepicker th.available:hover {
 		background-color: #777 !important;
 	}
+	#legend {
+		cursor: pointer;
+	}
+	#legend li.hidden {
+		text-decoration: line-through;
+	}
+	#legend li {
+		list-style: none;
+		font-size: 12px;
+		line-height: 1.5em;
+	}
+	#legend li:before {
+		display:inline-block;
+		content: "\25A0";
+		font-size: 200%;
+		vertical-align: -2px;
+		padding-right: 5px;
+	}
+	#legend li:nth-child(1):before {
+		color: #FF4E67;
+	}
+	#legend li:nth-child(2):before {
+		color: #F77D50;
+	}
+	#legend li:nth-child(3):before {
+		color: #EFBD52;
+	}
+	#legend li:nth-child(4):before {
+		color: #DAE753;
+	}
+	#legend li:nth-child(5):before {
+		color: #9ADF55;
+	}
 
 </style>
 <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
@@ -67,28 +127,38 @@
 <script src="{% static 'libs/daterangepicker/daterangepicker.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'libs/daterangepicker/daterangepicker.css' %}">
 
-<div>
-	<form method="GET" action="/">
-		{{ form }}
-	</form>
-	<br>
+<div class="container">
+	<div class="cell">
+		<h1>Resonance streaming stats</h1>
+	</div>
+	<div class="cell">
+		<form method="GET" action="/">
+			{{ form }}
+		</form>
+	</div>
+	<div class="cell" id="legend"></div>
 </div>
 
 <div class="container">
 	<div class="cell">
-		<div><canvas id="listenerCount"></canvas></div>
+		<div class="canvas"><canvas id="listenerCount"></canvas></div>
+		<div class="overlay"><div class="loader"></div></div>
 	</div>
 	<div class="cell">
-		<div><canvas id="listenerHours"></canvas></div>
+		<div class="canvas"><canvas id="listenerHours"></canvas></div>
+		<div class="overlay"><div class="loader"></div></div>
 	</div>
 	<div class="cell">
-		<div><canvas id="browser"></canvas></div>
+		<div class="canvas"><canvas id="browser"></canvas></div>
+		<div class="overlay"><div class="loader"></div></div>
 	</div>
 	<div class="cell">
-		<div><canvas id="countries"></canvas></div>
+		<div class="canvas"><canvas id="countries"></canvas></div>
+		<div class="overlay"><div class="loader"></div></div>
 	</div>
 	<div class="cell">
-		<div><canvas id="referer"></canvas></div>
+		<div class="canvas"><canvas id="referer"></canvas></div>
+		<div class="overlay"><div class="loader"></div></div>
 	</div>
 </div>
 
@@ -97,6 +167,7 @@
 	var station = '{{request.GET.station}}';
 	var start = period.split(' - ')[0];
 	var end = period.split(' - ')[1];
+	var countTotals = [];
 
 	$('#id_period').daterangepicker({
 		showDropdowns: true,
@@ -106,13 +177,20 @@
 		timePicker: true,
 		timePickerIncrement: 60,
 		locale: {
-			format: 'YYYY/MM/DD hA'
+			format: 'YYYY/MM/DD HH:mm'
 		},
 		startDate: period.split(' - ')[0],
 		endDate: period.split(' - ')[1],
 		minDate: '{{min_date}}',
 		maxDate: '{{max_date}}',
 	});
+
+	var defaultLegendClickHandler = Chart.defaults.global.legend.onClick;
+
+	var newLegendClickHandler = function (e, legendItem) {
+		defaultLegendClickHandler.call(this, e, legendItem);
+		updateTitle(this.chart);
+	}
 
 	Chart.defaults.global.defaultFontColor = 'lightgrey';
 	Chart.defaults.global.legend.position = 'right';
@@ -123,10 +201,135 @@
 	Chart.defaults.global.title.fontSize = 14;
 
 	var colours = ['#FF4E67', '#F77D50', '#EFBD52', '#DAE753', '#9ADF55', '#62D856', '#58D07E', '#59C9AB', '#5AB3C1']
+
+	function legendClickCallback(event) {
+		event = event || window.event;
+		var target = event.target || event.srcElement;
+
+		while (target.nodeName !== 'LI') {
+			target = target.parentElement;
+		}
+		var parent = target.parentElement;
+		var index = Array.prototype.slice.call(parent.children).indexOf(target);
+
+		$.each([listenerCountChart, listenerHoursChart], function(i, chart) {
+			var meta = chart.getDatasetMeta(index);
+			if (meta.hidden === null) {
+				meta.hidden = !chart.data.datasets[index].hidden;
+				target.classList.add('hidden');
+			} else {
+				target.classList.remove('hidden');
+				meta.hidden = null;
+			}
+			updateTitle(chart);
+			chart.update();
+		});
+	}
+
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
+	var listenerCountChart = new Chart(listenerCountId, {
+		type: 'bar',
+			data: {
+				datasets: [],
+			},
+			options: {
+				title: {
+					text: 'Listener count',
+				},
+				legend: {
+					display: false,
+					onClick: newLegendClickHandler, // for totals
+				},
+				tooltips: {
+					mode: 'x',
+				},
+				scales: {
+					xAxes: [{
+						type: 'time',
+						time: {
+							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+						},
+						stacked: true,
+						ticks: {
+							fontSize: 10,
+						},
+						offset: true,
+						gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+					}],
+					yAxes: [{
+						stacked: true,
+						ticks: {
+							fontSize: 10,
+							beginAtZero: true,
+							userCallback: function(label, index, labels) {
+								if (Math.floor(label) === label) {
+									return label;
+								}
+							},
+						},
+						gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+					}]
+				},
+			}
+		});
+
 	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
-	var listenerCountChart = null;
-	var listenerHoursChart = null;
+	var listenerHoursChart = new Chart(listenerHoursId, {
+		type: 'bar',
+			data: {
+				datasets: [],
+			},
+			options: {
+				title: {
+					text: 'Listener hours',
+				},
+				legend: {
+					display: false,
+					onClick: newLegendClickHandler,
+				},
+				tooltips: {
+					mode: 'x',
+				},
+				scales: {
+					xAxes: [{
+						type: 'time',
+						time: {
+							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+						},
+						stacked: true,
+						ticks: {
+							fontSize: 10,
+						},
+						offset: true,
+						gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+					}],
+					yAxes: [{
+						stacked: true,
+						ticks: {
+							fontSize: 10,
+							beginAtZero: true,
+						},
+						gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+					}]
+				},
+			}
+		});
 
 	var browserId = document.getElementById('browser').getContext('2d');
 	var browserChart = new Chart(browserId, {
@@ -161,6 +364,9 @@
 			title: {
 				text: 'Countries',
 			},
+			legend: {
+				display: false,
+			},
 			scales: {
 				xAxes: [{
 					ticks: {
@@ -170,7 +376,18 @@
 								return label;
 							}
 						},
-					}
+					},
+					gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+				}],
+				yAxes: [{
+					gridLines: {
+							display: false,
+
+						},
 				}]
 			},
 		}
@@ -191,6 +408,9 @@
 			title: {
 				text: 'Referer',
 			},
+			legend: {
+				display: false,
+			},
 			scales: {
 				xAxes: [{
 					ticks: {
@@ -200,23 +420,37 @@
 								return label;
 							}
 						},
-					}
+					},
+					gridLines: {
+							display: true,
+							drawOnChartArea: false,
+							color: '#555',
+						},
+				}],
+				yAxes: [{
+					gridLines: {
+							display: false,
+
+						},
 				}]
 			},
 		}
 	});
 
 	function getBrowsers(data) {
+		$(browserChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/useragent/browsers/', data, function(json) {
 			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
 			var labels = json.results.slice(0, colours.length).map(function(e) { return e.family });
 			browserChart.data.datasets[0].data = data;
 			browserChart.data.labels = labels;
 			browserChart.update();
+			$(browserChart.canvas).parent().siblings().fadeOut('fast')
 		});
 	}
 
 	function getCountries(data) {
+		$(countriesChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/listener/countries/', data, function(json) {
 			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
 			var labels = [];
@@ -230,16 +464,19 @@
 			countriesChart.data.datasets[0].data = data;
 			countriesChart.data.labels = labels;
 			countriesChart.update();
+			$(countriesChart.canvas).parent().siblings().fadeOut('fast')
 		});
 	}
 
 	function getReferers(data) {
+		$(refererChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/listener/referer/', data, function(json) {
 			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
 			var labels = json.results.slice(0, colours.length).map(function(e) { return e.referer });
 			refererChart.data.datasets[0].data = data;
 			refererChart.data.labels = labels;
 			refererChart.update();
+			$(refererChart.canvas).parent().siblings().fadeOut('fast')
 		});
 	}
 
@@ -248,13 +485,20 @@
 
 		$.each(chart.data.datasets, function(e, dataset) {
 			if (chart.isDatasetVisible(e)) {
-				total += dataset.data.map(function(e) {
-					return e.y
-				}).reduce(function(total, num) {
-					return parseFloat(total) + parseFloat(num);
-				})
+				if (chart.canvas.id === 'listenerCount') {
+					total += countTotals.filter(function(e) {
+						return e.stream === dataset.label
+					})[0].count
+				} else {
+					total += dataset.data.map(function(e) {
+						return e.y
+					}).reduce(function(total, num) {
+						return parseFloat(total) + parseFloat(num);
+					})
+				}
 			}
 		});
+
 		var title = chart.options.title.text.split(':')[0] + ': ' + parseFloat(total.toFixed(2));
 		chart.options.title.text = title
 		chart.update();
@@ -309,95 +553,164 @@
 			});
 
 			var start = moment(json[0].period).format('YYYY/MM/DD HH');
-			var end = moment(json[json.length-1].period).add('1', 'hours').format('YYYY/MM/DD HH');
+			var end = moment(json[json.length-1].period).format('YYYY/MM/DD HH');
 			$('#id_period').data('daterangepicker').setStartDate(start);
 			$('#id_period').data('daterangepicker').setEndDate(end);
 
-			listenerCountChart ? listenerCountChart.destroy() : null;
-			listenerHoursChart ? listenerHoursChart.destroy() : null;
-
-			listenerCountChart = drawChart(listenerCountId, 'Listener count', countDatasets);
-			listenerHoursChart = drawChart(listenerHoursId, 'Listener hours', hoursDatasets);
+			listenerCountChart.data.datasets = countDatasets;
+			listenerCountChart.update();
+			listenerHoursChart.data.datasets = hoursDatasets;
+			listenerHoursChart.update();
 			updateTitle(listenerHoursChart);
 			updateTitle(listenerCountChart);
 		});
 	}
 
-	var defaultLegendClickHandler = Chart.defaults.global.legend.onClick;
+	function getCount(data) {
+		$(listenerCountChart.canvas).parent().siblings().fadeIn('fast')
+		$.get('/listener/count/', data, function(json) {
+			var countDatasets = [];
+			var streams = Array.from(new Set(json.results.map(function(e) { return e['stream'] })));
+			var periods = Array.from(new Set(json.results.map(function(e) { return e['period'] })));
 
-	var newLegendClickHandler = function (e, legendItem) {
-		defaultLegendClickHandler.call(this, e, legendItem);
-		updateTitle(this.chart);
-	}
+			$.each(streams, function(stream_index, stream) {
+				var count_data = [];
+				$.each(periods, function(period_index, period) {
+					count_data.push({
+						x: new Date(period),
+						y: json.results.filter(function(e) {
+							return e.stream === stream && e.period === period
+						}).map(function(e) {
+							return e.count
+						})[0] || 0
+					})
+				});
+				countDatasets.push({
+					label: stream,
+					backgroundColor: colours[stream_index],
+					borderColor: colours[stream_index],
+					data: count_data,
+				})
+			})
 
-	function drawChart(chartId, title, datasets) {
-		var chart = new Chart(chartId, {
-			type: 'bar',
-			data: {
-				datasets: datasets,
-			},
-			options: {
-				title: {
-					text: title,
-				},
-				legend: {
-					onClick: newLegendClickHandler,
-				},
-				tooltips: {
-					mode: 'x',
-				},
-				scales: {
-					xAxes: [{
-						type: 'time',
-						time: {
-							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
-						},
-						stacked: true,
-						ticks: {
-							fontSize: 10,
-						},
-						offset: true,
-						gridLines: {
-							display: true,
-							drawOnChartArea: false,
-							color: '#555',
-						},
-					}],
-					yAxes: [{
-						stacked: true,
-						ticks: {
-							fontSize: 10,
-							beginAtZero: true,
-							userCallback: function(label, index, labels) {
-								if (title.includes('count')) {
-									if (Math.floor(label) === label) {
-										return label;
-									}
-								} else {
-									return label;
-								}
-							},
-						},
-						gridLines: {
-							display: true,
-							drawOnChartArea: false,
-							color: '#555',
-						},
-					}]
-				},
+			listenerCountChart.data.datasets = countDatasets;
+			listenerCountChart.update();
+			countTotals = json.totals;
+			updateTitle(listenerCountChart);
+
+			var start = moment(json.period.start).format('YYYY/MM/DD HH');
+			var end = moment(json.period.end).format('YYYY/MM/DD HH');
+			$('#id_period').data('daterangepicker').setStartDate(start);
+			$('#id_period').data('daterangepicker').setEndDate(end);
+
+			var legendContainer = document.getElementById("legend");
+			legendContainer.innerHTML = listenerCountChart.generateLegend();
+			var legendItems = legendContainer.getElementsByTagName('li');
+			for (var i = 0; i < legendItems.length; i += 1) {
+				legendItems[i].addEventListener("click", legendClickCallback, false);
 			}
+			$(listenerCountChart.canvas).parent().siblings().fadeOut('fast')
 		});
-		return chart;
 	}
+
+	function getCount2(data) {
+		$.get('/listener/count2/', data, function(json) {
+			var countDatasets = [];
+			var streams = json.totals.map(function(e) {return e.stream});
+
+			$.each(streams, function(stream_index, stream) {
+				var count_data = [];
+
+				$.each(json.results, function(result) {
+					$.each(json.results[result], function(i, e) {
+						if (e['stream'] === stream) {
+							count_data.push({
+								x: new Date(result),
+								y: e['count'],
+							})
+						}
+					})
+				});
+
+				countDatasets.push({
+					label: stream,
+					backgroundColor: colours[stream_index],
+					borderColor: colours[stream_index],
+					data: count_data,
+				})
+			});
+
+			listenerCountChart.data.datasets = countDatasets;
+			listenerCountChart.update();
+
+			var start = moment(json.results[0].period).format('YYYY/MM/DD HH');
+			var end = moment(json.results[json.results.length-1].period).format('YYYY/MM/DD HH');
+			$('#id_period').data('daterangepicker').setStartDate(start);
+			$('#id_period').data('daterangepicker').setEndDate(end);
+		});
+	}
+
+	function getHours(data) {
+		$(listenerHoursChart.canvas).parent().siblings().fadeIn('fast')
+		$.get('/listener/hours/', data, function(json) {
+			var hoursDatasets = [];
+			var streams = Array.from(new Set(json.results.map(function(e) { return e['stream'] })));
+			var periods = Array.from(new Set(json.results.map(function(e) { return e['period'] })));
+
+			$.each(streams, function(stream_index, stream) {
+				var hours_data = [];
+				$.each(periods, function(period_index, period) {
+					hours_data.push({
+						x: new Date(period),
+						y: json.results.filter(function(e) {
+							return e.stream === stream && e.period === period
+						}).map(function(e) {
+							return e.hours.toFixed(2)
+						})[0] || 0
+					})
+				});
+				hoursDatasets.push({
+					label: stream,
+					backgroundColor: colours[stream_index],
+					borderColor: colours[stream_index],
+					data: hours_data,
+				})
+			})
+
+			listenerHoursChart.data.datasets = hoursDatasets;
+			listenerHoursChart.update();
+			updateTitle(listenerHoursChart);
+			$(listenerHoursChart.canvas).parent().siblings().fadeOut('fast');
+		});
+	}
+
+	function changeURL() {
+		var station = $('#id_station').val();
+		var start = moment($('#id_period').val().split(' - ')[0]).toISOString();
+		var end = moment($('#id_period').val().split(' - ')[1]).toISOString();
+		window.history.pushState("object or string", "Title", "/?start=" + start + "&end=" + end + "&station=" + station);
+	};
 
 	$(document).ready(function(){
-		getAggregates();
-		getBrowsers();
-		getCountries();
-		getReferers();
+		var url = new URL(window.location.href);
+		var data = {
+			station: url.searchParams.get("station"),
+			start: url.searchParams.get("start"),
+			end: url.searchParams.get("end"),
+		}
+		getCount(data);
+		getHours(data);
+		getBrowsers(data);
+		getCountries(data);
+		getReferers(data);
 	});
 	$('input[name="period"]').on('apply.daterangepicker', function() {
-		getAggregates({
+		getCount({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getHours({
 			station: $('#id_station').val(),
 			start: $('#id_period').val().split(' - ')[0],
 			end: $('#id_period').val().split(' - ')[1],
@@ -417,9 +730,15 @@
 			start: $('#id_period').val().split(' - ')[0],
 			end: $('#id_period').val().split(' - ')[1],
 		});
+		changeURL();
 	});
 	$('select[name="station"]').change(function() {
-		getAggregates({
+		getCount({
+			station: $('#id_station').val(),
+			start: $('#id_period').val().split(' - ')[0],
+			end: $('#id_period').val().split(' - ')[1],
+		});
+		getHours({
 			station: $('#id_station').val(),
 			start: $('#id_period').val().split(' - ')[0],
 			end: $('#id_period').val().split(' - ')[1],
@@ -439,6 +758,7 @@
 			start: $('#id_period').val().split(' - ')[0],
 			end: $('#id_period').val().split(' - ')[1],
 		});
+		changeURL();
 	});
 
 </script>

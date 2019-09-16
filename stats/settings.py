@@ -24,7 +24,7 @@ from stats.secret import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost',]
+ALLOWED_HOSTS = ['localhost', '10.0.2.24']
 
 
 # Application definition

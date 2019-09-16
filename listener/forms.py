@@ -1,5 +1,5 @@
 from django import forms
-from .models import Listener, Stream, ListenerAggregate
+from .models import Listener, Stream, Station, ListenerAggregate
 
 
 class ListenerForm(forms.ModelForm):
@@ -9,7 +9,7 @@ class ListenerForm(forms.ModelForm):
 
 
 class ListenerAggregateForm(forms.ModelForm):
-	station = forms.ChoiceField(choices=[('A', 'All')] + Stream.STATION_CHOICES)
+	station = forms.ModelChoiceField(queryset=Station.objects.all())
 	period = forms.CharField(widget=forms.TextInput(attrs={'size': 35}))
 
 	class Meta:

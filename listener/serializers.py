@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import *
 from django_countries.serializer_fields import CountryField
@@ -31,24 +32,30 @@ class AggregateSerializer(serializers.Serializer):
 	stream = AggregateStreamSerializer(many=True)
 
 
-class CountStreamSerializer(serializers.Serializer):
-	mountpoint = serializers.CharField()
-	listeners = serializers.IntegerField()
+class DateTimeTZField(serializers.DateTimeField):
+	def to_representation(self, value):
+		value = timezone.localtime(value)
+		return super(DateTimeTZField, self).to_representation(value)
 
 
-class CountSerializer(serializers.Serializer):
-	hour = serializers.DateTimeField()
-	stream = CountStreamSerializer(many=True)
+class CountSerializer(serializers.ModelSerializer):
+	period = serializers.DateTimeField()
+	stream = serializers.ReadOnlyField()
+	count = serializers.IntegerField(read_only=True)
+
+	class Meta:
+		model = Listener
+		fields = ('period', 'stream', 'count',)
 
 
-class HoursStreamSerializer(serializers.Serializer):
-	mountpoint = serializers.CharField()
-	listenerHours = serializers.DurationField()
+class HoursSerializer(serializers.ModelSerializer):
+	period = serializers.DateTimeField()
+	stream = serializers.ReadOnlyField()
+	hours = serializers.FloatField(read_only=True)
 
-
-class HoursSerializer(serializers.Serializer):
-	hour = serializers.DateTimeField()
-	stream = HoursStreamSerializer(many=True)
+	class Meta:
+		model = Listener
+		fields = ('period', 'stream', 'hours', )
 
 
 class CountriesSerializer(serializers.ModelSerializer):
@@ -62,7 +69,7 @@ class CountriesSerializer(serializers.ModelSerializer):
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
 		if not data['country']:
-			data['country'] = "Unknown"
+			data['country'] = 'Direct'
 		return data
 
 
@@ -76,17 +83,6 @@ class RefererSerializer(serializers.ModelSerializer):
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
 		if not data['referer']:
-			data['referer'] = "Unknown"
+			data['referer'] = 'Direct'
 		return data
-
-
-class NewListenerSerializer(serializers.ModelSerializer):
-	count = serializers.IntegerField(read_only=True)
-	station = serializers.ReadOnlyField(source='stream__station', read_only=True)
-	hour = serializers.DateTimeField(read_only=True)
-
-	class Meta:
-		model = Listener
-		fields = ('station', 'count', 'hour',)
-
 

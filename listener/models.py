@@ -3,6 +3,7 @@ from django import forms
 from django.core.validators import MinValueValidator
 from django_countries.fields import CountryField
 from django.contrib.postgres.fields import DateTimeRangeField
+from django.contrib.postgres.indexes import GistIndex
 from datetime import timedelta
 from useragent.models import UserAgent
 
@@ -25,18 +26,23 @@ class IngestParameters(models.Model):
 		return 'Minimum duration: %d secs, Session threshold: %02d:%02d' % (self.minimum_duration, h, m)
 		
 
-class Stream(models.Model):
-	STATION_CHOICES = [
-		('R', 'Resonance'),
-		('E', 'Extra'),
-	]
-	
-	mountpoint 	= models.CharField(max_length=255, unique=True)
-	bitrate 	= models.PositiveSmallIntegerField()
-	station		= models.CharField(choices=STATION_CHOICES, max_length=1)
+class Station(models.Model):
+	name = models.CharField(max_length=127, unique=True)
 
 	class Meta:
-		ordering = ('-station', '-bitrate', 'mountpoint')
+		ordering = ('-name',)
+
+	def __str__(self):
+		return self.name
+
+
+class Stream(models.Model):
+	mountpoint 	= models.CharField(max_length=255, unique=True)
+	bitrate 	= models.PositiveSmallIntegerField()
+	station 	= models.ForeignKey(Station, on_delete=models.PROTECT)
+
+	class Meta:
+		ordering = ('-station__name', '-bitrate', 'mountpoint')
 
 	def __str__(self):
 		return '%s – %skbps' % (self.mountpoint, self.bitrate)
@@ -57,6 +63,9 @@ class Listener(models.Model):
 	class Meta:
 		unique_together = ('ip_address', 'stream', 'session', 'user_agent')
 		ordering = ('session',)
+		indexes = [
+			GistIndex(fields=['session',]),
+		]
 
 	@property
 	def connected_at(self):
