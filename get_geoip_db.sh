@@ -2,7 +2,7 @@
 # This script is called from the crontab which runs every first Tuesday of the month and downloads the latest GeoIP databases
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-mkdir -p $DIR/Geolite
+mkdir -p $DIR/GeoLite
 cd $DIR/GeoLite/
 
 wget 'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz' -O GeoLite2-City.tar.gz
