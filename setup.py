@@ -1,4 +1,3 @@
-#!/Users/james/Resonance/stats/env/bin/python
 import os, re, sys, traceback
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stats.settings")
@@ -26,12 +25,8 @@ for source in sources:
 		bitrate = 48
 	else:
 		bitrate = 192
-	if 'extra' in source:
-		station = 'E'
-	else:
-		station = 'R'
-
-	stream = Stream.objects.get_or_create(mountpoint=source, bitrate=bitrate, station=station)
+	
+	stream = Stream.objects.get_or_create(mountpoint=source, bitrate=bitrate)
 
 if not User.objects.filter(username=SUPERUSER['name']):
 	user = User.objects.create_user(SUPERUSER['name'], password=SUPERUSER['pass'])
