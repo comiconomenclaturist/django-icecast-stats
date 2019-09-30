@@ -79,34 +79,4 @@ class Listener(models.Model):
 		return self.ip_address
 
 
-class ListenerAggregate(models.Model):
-	period		= DateTimeRangeField()
-	stream		= models.ForeignKey(Stream, on_delete='PROTECT')
-	count 		= models.PositiveIntegerField()
-	duration 	= models.DurationField()
-
-	@property
-	def hours(self):
-		m, s = divmod(self.duration.total_seconds(), 60)
-		h, m = divmod(m, 60)
-		return round(float(h + (m/60)), 2)
-
-	class Meta:
-		ordering = ['-period']
-
-	def full_clean(self, *args, **kwargs):
-		super(ListenerAggregate, self).full_clean(*args, **kwargs)
-		la = ListenerAggregate.objects.filter(
-			period__overlap=self.period,
-			stream=self.stream).exclude(pk=self.pk).first()
-		if la:
-			raise forms.ValidationError('Period overlaps with "%s"' % la)	
-
-	def save(self, *args, **kwargs):
-		self.full_clean()
-		super(ListenerAggregate, self).save(*args, **kwargs)
-	
-	def __str__(self):
-		return str(self.period.lower) + ' – ' + str(self.period.upper) + ' – ' + str(self.stream)
-
 	

@@ -21,9 +21,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 from stats.secret import *
 
-ALLOWED_HOSTS = ['localhost',]
-
-
 # Application definition
 
 INSTALLED_APPS = [
