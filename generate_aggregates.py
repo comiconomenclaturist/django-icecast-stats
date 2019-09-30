@@ -1,5 +1,3 @@
-#!/Users/james/Resonance/stats/env/bin/python
-
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stats.settings")
 import django
