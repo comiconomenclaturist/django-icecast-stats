@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import gzip
+import boto3
 import traceback
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stats.settings")
@@ -83,72 +84,88 @@ params = IngestParameters.objects.all().first()
 
 try:
 	filepath = sys.argv[1]
-	listeners = []
+	filename = os.path.basename(filepath)
 
-	with gzip.open(filepath, 'rt', encoding='ISO-8859-1') as log_file:
-		for line in log_file:
-			match = re.match(regex, line)
+	if filename.startswith('access.log'):
+		listeners = []
 
-			if match:
-				m = match.groupdict()
+		with gzip.open(filepath, 'rt', encoding='ISO-8859-1') as log_file:
+			for line in log_file:
+				match = re.match(regex, line)
 
-				# The rest of the log file line can be truncated at 1024 characters if there is a long referer/user agent string.
-				# User Agent strings can also contain double quotes (eg in 4" screen)
-				# Let's first split by double-quote, space, double-quote. Referer should be the first list item.
-				# Then we split by trailing digits (duration), if present.
-				remaining = re.split('" "', line[match.end():])
-				referer = remaining[0].strip('"')
-				if len(remaining) > 1:
-					user_agent = re.split('" \d+$', remaining[1])[0]
-					duration = re.findall('.* (\d+)$', remaining[1])
-				else:
-					user_agent = ''
-					duration = None
+				if match:
+					m = match.groupdict()
 
-				if m['ip_addr'] != '127.0.0.1' and m['request'] == 'GET' and m['url'] in streams.values_list('mountpoint', flat=True):
-
-					stream = streams.get(mountpoint=m['url'])
-					
-					# If we didn't parse a duration from the original string, calculate it from the bytes sent.
-					# Note that this is not backwards compatible with the previous bitrates (128kbps) - when did this change?
-					if duration:
-						duration = int(duration[0])
+					# The rest of the log file line can be truncated at 1024 characters if there is a long referer/user agent string.
+					# User Agent strings can also contain double quotes (eg in 4" screen)
+					# Let's first split by double-quote, space, double-quote. Referer should be the first list item.
+					# Then we split by trailing digits (duration), if present.
+					remaining = re.split('" "', line[match.end():])
+					referer = remaining[0].strip('"')
+					if len(remaining) > 1:
+						user_agent = re.split('" \d+$', remaining[1])[0]
+						duration = re.findall('.* (\d+)$', remaining[1])
 					else:
-						duration = int(int(m['bytes']) / (stream.bitrate * 128))
-					
-					if duration >= params.minimum_duration:
-						duration 		= timedelta(seconds=duration)
-						disconnected_at = parse(m['date'].replace(':', ' ', 1)).astimezone()
-						connected_at	= disconnected_at - duration
-						session 		= DateTimeTZRange(connected_at, disconnected_at)
-						user_agent 		= get_user_agent(unquote(user_agent))
-						location		= get_location(m['ip_addr'])
+						user_agent = ''
+						duration = None
 
-						listener = Listener(
-							ip_address 		= m['ip_addr'],
-							stream 			= stream,
-							referer			= unquote(referer.replace('-', ''))[:255],
-							session 		= session,
-							duration		= duration,
-							user_agent 		= user_agent,
-							country			= location['country_code'],
-							city 			= location['city'],
-							latitude 		= location['latitude'],
-							longitude 		= location['longitude'],
-							)
+					if m['ip_addr'] != '127.0.0.1' and m['request'] == 'GET' and m['url'] in streams.values_list('mountpoint', flat=True):
 
-						listeners.append(listener)
-
-						while update_listeners(listener):
-							update_listeners(listener)
+						stream = streams.get(mountpoint=m['url'])
 						
-				if not match:
-					print('Not imported: %s' % line)
+						# If we didn't parse a duration from the original string, calculate it from the bytes sent.
+						# Note that this is not backwards compatible with the previous bitrates (128kbps) - when did this change?
+						if duration:
+							duration = int(duration[0])
+						else:
+							duration = int(int(m['bytes']) / (stream.bitrate * 128))
+						
+						if duration >= params.minimum_duration:
+							duration 		= timedelta(seconds=duration)
+							disconnected_at = parse(m['date'].replace(':', ' ', 1)).astimezone()
+							connected_at	= disconnected_at - duration
+							session 		= DateTimeTZRange(connected_at, disconnected_at)
+							user_agent 		= get_user_agent(unquote(user_agent))
+							location		= get_location(m['ip_addr'])
 
-	while update_db_listeners(listeners):
-		update_db_listeners(listeners)
+							listener = Listener(
+								ip_address 		= m['ip_addr'],
+								stream 			= stream,
+								referer			= unquote(referer.replace('-', ''))[:255],
+								session 		= session,
+								duration		= duration,
+								user_agent 		= user_agent,
+								country			= location['country_code'],
+								city 			= location['city'],
+								latitude 		= location['latitude'],
+								longitude 		= location['longitude'],
+								)
 
-	Listener.objects.bulk_create(listeners)
+							listeners.append(listener)
+
+							while update_listeners(listener):
+								update_listeners(listener)
+
+		while update_db_listeners(listeners):
+			update_db_listeners(listeners)
+
+		Listener.objects.bulk_create(listeners)
+
+		year, month, day = re.match('access.log-(\d{4})(\d{2})(\d{2})\d{2}.gz', filename).groups()
+		s3_path = os.path.join(year, month, day, filepath)
+		
+		s3 = boto3.client(
+			's3',
+			aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+			aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+			)
+
+		# upload = s3.put_object(
+		# 	Bucket=settings.AWS_STATS_BUCKET,
+		# 	Key=s3_path,
+		# 	Body=filepath
+		# 	)
+
 
 except Exception:
 	subject = 'Error importing icecast logfile'
