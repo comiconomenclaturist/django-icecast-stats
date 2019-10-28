@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is called from the crontab which runs every first Tuesday of the month and downloads the latest GeoIP databases
+# This script is called from the crontab which runs every Wednesday and downloads the latest GeoIP databases
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 mkdir -p $DIR/GeoLite
