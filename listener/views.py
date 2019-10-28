@@ -134,11 +134,28 @@ class DateRangesMixin(GetParamsMixin):
 
 
 class CountriesViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+	def list(self, request, *args, **kwargs):
+		response = super(CountriesViewSet, self).list(request, args, kwargs)
+		response.data['total'] = self.get_queryset().aggregate(Sum('count')).get('count__sum')
+		response.data['distinct'] = self.get_queryset().values('country').distinct().count()
+		return response
+
 	field = 'country'
 	serializer_class = CountriesSerializer
 
 
 class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+	def get_queryset(self):
+		self.direct = super().get_queryset().filter(referer='')[0]['count']
+		qs = super().get_queryset().filter(referer__gt='')
+		return qs
+
+	def list(self, request, *args, **kwargs):
+		response = super(RefererViewSet, self).list(request, args, kwargs)
+		response.data['total'] = self.get_queryset().aggregate(Sum('count')).get('count__sum')
+		response.data['direct'] = self.direct
+		return response
+
 	field = 'referer'
 	serializer_class = RefererSerializer
 

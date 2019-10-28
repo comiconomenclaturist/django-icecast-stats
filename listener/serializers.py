@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import *
 from django_countries.serializer_fields import CountryField
 from django_countries.serializers import CountryFieldMixin
+import re
 
 
 class ListenerSerializer(serializers.ModelSerializer):
@@ -69,7 +70,7 @@ class CountriesSerializer(serializers.ModelSerializer):
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
 		if not data['country']:
-			data['country'] = 'Direct'
+			data['country'] = 'Unknown'
 		return data
 
 
@@ -82,7 +83,6 @@ class RefererSerializer(serializers.ModelSerializer):
 
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
-		if not data['referer']:
-			data['referer'] = 'Direct'
+		data['referer'] = re.sub(r'(?:.*://)?([^/?]+).*', r'\1', data['referer'])
 		return data
 

@@ -389,6 +389,17 @@
 			legend: {
 				display: false,
 			},
+			tooltips: {
+				mode: 'label',
+				callbacks: {
+					afterLabel : function(tooltipItem, data) {
+						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
+					},
+					footer: function() {
+						return window.percentage.toFixed(2) + '% of total';
+					}
+				},
+			},
 			scales: {
 				xAxes: [{
 					ticks: {
@@ -428,10 +439,21 @@
 		},
 		options: {
 			title: {
-				text: 'Referer',
+				text: 'Referrals',
 			},
 			legend: {
 				display: false,
+			},
+			tooltips: {
+				mode: 'label',
+				callbacks: {
+					afterLabel : function(tooltipItem, data) {
+						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
+					},
+					footer: function() {
+						return window.percentage.toFixed(2) + '% of total referrals';
+					}
+				},
 			},
 			scales: {
 				xAxes: [{
@@ -485,6 +507,9 @@
 			// var labels = json.results.slice(0, colours.length).map(function(e) { return e.country.name });
 			countriesChart.data.datasets[0].data = data;
 			countriesChart.data.labels = labels;
+			countriesChart.data.total = json['total'];
+			var title = countriesChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['distinct']);
+			countriesChart.options.title.text = title;
 			countriesChart.update();
 			$(countriesChart.canvas).parent().siblings().fadeOut('fast')
 		});
@@ -497,6 +522,9 @@
 			var labels = json.results.slice(0, colours.length).map(function(e) { return e.referer });
 			refererChart.data.datasets[0].data = data;
 			refererChart.data.labels = labels;
+			refererChart.data.total = json['total'];
+			var title = refererChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['total']) + ' / Direct: ' + parseFloat(json['direct']);
+			refererChart.options.title.text = title;
 			refererChart.update();
 			$(refererChart.canvas).parent().siblings().fadeOut('fast')
 		});
