@@ -12,3 +12,4 @@ class AuthRequiredMiddleware(object):
 		# Code to be executed for each request/response after the view is called.
 		response = self.get_response(request)
 		return response
+		

@@ -10,12 +10,12 @@ from useragent.models import UserAgent
 
 class IngestParameters(models.Model):
 	minimum_duration = models.PositiveSmallIntegerField(
-		default=3,
-		validators=[MinValueValidator(1)],
-		help_text=u'Minimum listener duration (in seconds) required to import connection to database')
+		default = 3,
+		validators = [MinValueValidator(1)],
+		help_text = u'Minimum listener duration (in seconds) required to import connection to database')
 	session_threshold = models.PositiveSmallIntegerField(
-		default=120,
-		help_text=u'Maximum gap between connections (in seconds) to concatenate connections to sessions')
+		default = 120,
+		help_text = u'Maximum gap between connections (in seconds) to concatenate connections to sessions')
 
 	class Meta:
 		verbose_name = 'Ingest Parameters'
@@ -37,9 +37,9 @@ class Station(models.Model):
 
 
 class Stream(models.Model):
-	mountpoint 	= models.CharField(max_length=255, unique=True)
-	bitrate 	= models.PositiveSmallIntegerField()
-	station 	= models.ForeignKey(Station, on_delete=models.PROTECT)
+	mountpoint	= models.CharField(max_length=255, unique=True)
+	bitrate		= models.PositiveSmallIntegerField()
+	station		= models.ForeignKey(Station, on_delete=models.PROTECT)
 
 	class Meta:
 		ordering = ('-station__name', '-bitrate', 'mountpoint')
@@ -49,16 +49,16 @@ class Stream(models.Model):
 
 
 class Listener(models.Model):
-	ip_address 		= models.GenericIPAddressField(verbose_name='IP address')
-	stream 			= models.ForeignKey(Stream, on_delete='PROTECT')
-	session 		= DateTimeRangeField()
-	duration 		= models.DurationField()
-	referer 		= models.CharField(max_length=255)
-	user_agent 		= models.ForeignKey(UserAgent, on_delete=models.SET_NULL, null=True)
-	country 		= CountryField(null=True)
-	city 			= models.CharField(max_length=255, null=True)
-	latitude		= models.DecimalField(max_digits=9, decimal_places=6, null=True)
-	longitude		= models.DecimalField(max_digits=9, decimal_places=6, null=True)
+	ip_address	= models.GenericIPAddressField(verbose_name='IP address')
+	stream		= models.ForeignKey(Stream, on_delete='PROTECT')
+	session		= DateTimeRangeField()
+	duration	= models.DurationField()
+	referer		= models.CharField(max_length=255)
+	user_agent	= models.ForeignKey(UserAgent, on_delete=models.SET_NULL, null=True)
+	country		= CountryField(null=True)
+	city		= models.CharField(max_length=255, null=True)
+	latitude	= models.DecimalField(max_digits=9, decimal_places=6, null=True)
+	longitude	= models.DecimalField(max_digits=9, decimal_places=6, null=True)
 
 	class Meta:
 		unique_together = ('ip_address', 'stream', 'session', 'user_agent')

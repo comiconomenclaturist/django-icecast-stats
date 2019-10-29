@@ -1,4 +1,4 @@
-from django.db.models import Sum, Count, Value, DateTimeField, ExpressionWrapper, F, DurationField, FloatField, CharField
+from django.db.models import Sum, Count, Value, DateTimeField, ExpressionWrapper, F, Func, DurationField, FloatField, CharField
 from django.db.models.functions import Least, Greatest, Extract, Cast
 from django.contrib.postgres.fields.ranges import RangeStartsWith, RangeEndsWith
 from django.utils import timezone
@@ -24,8 +24,8 @@ class ListenerCount(views.APIView):
 				listeners.append({
 					'mountpoint': stream.get_station_display(),
 					'listeners': Listener.objects.filter(
-						stream__station__in=stream.station,
-						session__overlap=d).count()
+						stream__station__in = stream.station,
+						session__overlap = d).count()
 					})
 
 			data.append({
@@ -50,8 +50,8 @@ class ListenerHours(views.APIView):
 				l_hours = timedelta()
 
 				listeners = Listener.objects.filter(
-					stream__station__in=stream.station,
-					session__overlap=d)
+					stream__station__in = stream.station,
+					session__overlap = d)
 
 				for listener in listeners:
 					l_hours += min(listener.session.upper, d.upper) - max(listener.session.lower, d.lower)
@@ -144,10 +144,40 @@ class CountriesViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 	serializer_class = CountriesSerializer
 
 
-class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+# class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+# 	def get_queryset(self):
+# 		self.direct = super().get_queryset().filter(referer='')[0]['count']
+# 		qs = super().get_queryset().filter(referer__gt='')
+# 		return qs
+
+# 	def list(self, request, *args, **kwargs):
+# 		response = super(RefererViewSet, self).list(request, args, kwargs)
+# 		response.data['total'] = self.get_queryset().aggregate(Sum('count')).get('count__sum')
+# 		response.data['direct'] = self.direct
+# 		return response
+
+# 	field = 'referer'
+# 	serializer_class = RefererSerializer
+
+
+class RefererViewSet(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
-		self.direct = super().get_queryset().filter(referer='')[0]['count']
-		qs = super().get_queryset().filter(referer__gt='')
+		qs = Listener.objects.filter(session__overlap=self.period)
+
+		if self.station != 'A':
+			qs = qs.filter(stream__station=self.station)
+
+		self.direct = qs.filter(referer='').count()
+
+		qs = qs.filter(referer__gt='').annotate(
+			domain = Func(
+				F('referer'),
+				Value('https?://(.+?)(?:\:\d+)?(?:\/.*)?'),
+				Value('\\1'),
+				function = 'regexp_replace'),
+			)
+		qs = qs.order_by('domain').values('domain').annotate(count=Count('*')).order_by('-count')
+
 		return qs
 
 	def list(self, request, *args, **kwargs):
@@ -176,14 +206,14 @@ class CountViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 		for date_range in self.date_ranges:
 			qs = qs.union(
 				listeners.filter(
-					session__overlap=date_range
+					session__overlap = date_range
 					)
 				.values(streams)
 				.order_by(streams)
 				.annotate(
-					period=Value(date_range.lower, DateTimeField()),
-					count=Count(streams),
-					stream=Cast(streams, CharField()),
+					period = Value(date_range.lower, DateTimeField()),
+					count = Count(streams),
+					stream = Cast(streams, CharField()),
 					)
 				)
 
@@ -211,8 +241,8 @@ class CountViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 			'totals': listeners.order_by(
 				stream_order).values(
 				streams).annotate(
-				count=Count(streams),
-				stream=Cast(streams, CharField())).values('stream', 'count')
+				count = Count(streams),
+				stream = Cast(streams, CharField())).values('stream', 'count')
 				})
 		return Response(response)
 
@@ -233,21 +263,21 @@ class Count2ViewSet(DateRangesMixin, views.APIView):
 		for date_range in self.date_ranges:
 			qs = qs.union(
 				listeners.filter(
-					session__overlap=date_range
+					session__overlap = date_range
 					)
 				.values(streams)
 				.order_by(streams)
 				.annotate(
-					period=Value(date_range.lower, DateTimeField()),
-					count=Count(streams),
-					stream=Cast(streams, CharField()),
+					period = Value(date_range.lower, DateTimeField()),
+					count = Count(streams),
+					stream = Cast(streams, CharField()),
 					)
 				)
 
 		qs = qs.order_by('period', stream_order,)
 
 		totals = listeners.filter(
-			session__overlap=self.period
+			session__overlap = self.period
 			).order_by(streams).values(streams).annotate(stream=Cast(streams, CharField()), count=Count(streams)).values('stream', 'count').order_by(stream_order)
 		
 		results = {}
@@ -288,20 +318,20 @@ class HoursViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 		for date_range in self.date_ranges:
 			qs = qs.union(
 				listeners.filter(
-					session__overlap=date_range
+					session__overlap = date_range
 					)
 				.annotate(period=Value(date_range, DateTimeRangeField()),)
 				.annotate(
-					start=Greatest(RangeStartsWith('period'), RangeStartsWith('session')),
-					end=Least(RangeEndsWith('period'), RangeEndsWith('session'))
+					start = Greatest(RangeStartsWith('period'), RangeStartsWith('session')),
+					end = Least(RangeEndsWith('period'), RangeEndsWith('session'))
 					)
 				.annotate(length=ExpressionWrapper(F('end') - F('start'), output_field=DurationField()))
 				.values(streams)
 				.order_by(streams)
 				.annotate(
-					hours=ExpressionWrapper(Extract(Sum('length'), 'epoch') / 3600, output_field=FloatField()),
-					period=Value(date_range.lower, DateTimeField()),
-					stream=Cast(streams, CharField()),
+					hours = ExpressionWrapper(Extract(Sum('length'), 'epoch') / 3600, output_field=FloatField()),
+					period = Value(date_range.lower, DateTimeField()),
+					stream = Cast(streams, CharField()),
 					)
 				)
 

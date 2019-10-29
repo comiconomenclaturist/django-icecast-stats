@@ -519,7 +519,7 @@
 		$(refererChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/listener/referer/', data, function(json) {
 			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
-			var labels = json.results.slice(0, colours.length).map(function(e) { return e.referer });
+			var labels = json.results.slice(0, colours.length).map(function(e) { return e.domain });
 			refererChart.data.datasets[0].data = data;
 			refererChart.data.labels = labels;
 			refererChart.data.total = json['total'];

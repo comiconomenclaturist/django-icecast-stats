@@ -22,14 +22,14 @@ class Browsers(viewsets.ReadOnlyModelViewSet):
 			end = Listener.objects.last().session.upper.replace(minute=0, second=0) + timedelta(hours=1)
 			start = end - timedelta(days=1)
 
-		queryset = Listener.objects.filter(session__overlap=DateTimeTZRange(start, end))
+		qs = Listener.objects.filter(session__overlap=DateTimeTZRange(start, end))
 
 		if station != 'A':
-			queryset = queryset.filter(stream__station=station)
+			qs = qs.filter(stream__station=station)
 
-		queryset = queryset.values('user_agent__browser__family').annotate(count=Count('*')).order_by('-count')
+		qs = qs.values('user_agent__browser__family').annotate(count=Count('*')).order_by('-count')
 
-		return queryset
+		return qs
 
 	serializer_class = BrowserSerializer
 	permission_classes = [IsAuthenticated]

@@ -18,22 +18,22 @@ def get_user_agent(string, user_agent=None, device=None, os=None, browser=None):
 
             if ua.device.family != 'Other':
                 device = Device.objects.get_or_create(
-                    family=ua.device.family, brand=ua.device.brand, model=ua.device.model)[0]
+                    family = ua.device.family, brand = ua.device.brand, model = ua.device.model)[0]
             if ua.os.family != 'Other':
                 os = OS.objects.get_or_create(
-                    family=ua.os.family, version=ua.os.version_string)[0]
+                    family = ua.os.family, version = ua.os.version_string)[0]
             if ua.browser.family != 'Other':
                 browser = Browser.objects.get_or_create(
-                    family=ua.browser.family, version=ua.browser.version_string)[0]
+                    family = ua.browser.family, version = ua.browser.version_string)[0]
 
             user_agent = UserAgent.objects.get_or_create(
-                device=device,
-                os=os,
-                browser=browser,
-                string=string,
-                is_mobile=ua.is_mobile,
-                is_tablet=ua.is_tablet,
-                is_bot=ua.is_bot,
+                device      = device,
+                os          = os,
+                browser     = browser,
+                string      = string,
+                is_mobile   = ua.is_mobile,
+                is_tablet   = ua.is_tablet,
+                is_bot      = ua.is_bot,
             )[0]
 
     return user_agent

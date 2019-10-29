@@ -1,7 +1,7 @@
 from django.db import models
 
 class Device(models.Model):
-	family 	= models.CharField(max_length=255)
+	family	= models.CharField(max_length=255)
 	brand	= models.CharField(max_length=255, null=True)
 	model	= models.CharField(max_length=255, null=True)
 
@@ -26,8 +26,8 @@ class OS(models.Model):
 		return ', '.join(filter(None, (self.family, self.version)))
 
 class Browser(models.Model):
-	family 	= models.CharField(max_length=255)
-	version = models.CharField(max_length=255)
+	family	= models.CharField(max_length=255)
+	version	= models.CharField(max_length=255)
 
 	class Meta:
 		unique_together = ['family', 'version']
@@ -37,12 +37,12 @@ class Browser(models.Model):
 		return ', '.join(filter(None, (self.family, self.version)))
 
 class UserAgent(models.Model):
-	string 		= models.CharField(max_length=255)
-	device 		= models.ForeignKey(Device, blank=True, null=True, on_delete='CASCADE')
-	os 			= models.ForeignKey(OS, blank=True, null=True, on_delete='CASCADE')
-	browser 	= models.ForeignKey(Browser, blank=True, null=True, on_delete='CASCADE')
-	is_mobile 	= models.BooleanField(default=False)
-	is_tablet 	= models.BooleanField(default=False)
+	string		= models.CharField(max_length=255)
+	device		= models.ForeignKey(Device, blank=True, null=True, on_delete='CASCADE')
+	os			= models.ForeignKey(OS, blank=True, null=True, on_delete='CASCADE')
+	browser		= models.ForeignKey(Browser, blank=True, null=True, on_delete='CASCADE')
+	is_mobile	= models.BooleanField(default=False)
+	is_tablet	= models.BooleanField(default=False)
 	is_bot		= models.BooleanField(default=False)
 
 	class Meta:
