@@ -45,7 +45,7 @@
 	}
 	@media only screen and (max-width: 1200px) {
 		.container .cell {
-			width: 50%;
+			width: calc(50% - 10px);
 		}
 	}
 	@media only screen and (max-width: 720px) {
@@ -88,11 +88,20 @@
 	}
 	#legend {
 		cursor: pointer;
+		float: left;
+	}
+	#live {
+		float: right;
+		margin-top: 5px;
+	}
+	#live ul:before {
+		display:inline-block;
+		content: 'LIVE NOW';
 	}
 	#legend li.hidden {
 		text-decoration: line-through;
 	}
-	#legend li {
+	#legend li, #live li {
 		list-style: none;
 		font-size: 12px;
 		line-height: 1.5em;
@@ -129,14 +138,19 @@
 
 <div class="container">
 	<div class="cell">
-		<h1>Resonance streaming stats</h1>
+		<h1>Resonance Streaming Stats</h1>
 	</div>
 	<div class="cell">
 		<form method="GET" action="/">
 			{{ form }}
 		</form>
 	</div>
-	<div class="cell" id="legend"></div>
+	<div class="cell">
+		<div id="legend">
+		</div>
+		<div id="live">
+		</div>
+	</div>
 </div>
 
 <div class="container">
@@ -678,6 +692,15 @@
 		window.history.pushState("object or string", "Title", "/?start=" + start + "&end=" + end + "&station=" + station);
 	};
 
+	function getLiveListeners() {
+		$.get('/live/', function(json) {
+			$('#live').html('<ul></ul>');
+			$.each(json, function(station, listeners) {
+				$('#live').find('ul').append('<li>' + station + ': ' + listeners + '</li>');
+			})
+		});
+	}
+
 	$(document).ready(function(){
 		var url = new URL(window.location.href);
 		var data = {
@@ -690,6 +713,7 @@
 		getBrowsers(data);
 		getCountries(data);
 		getReferers(data);
+		setInterval(function(){ getLiveListeners(); }, 30000);
 	});
 	$('input[name="period"]').on('apply.daterangepicker', function() {
 		getCount({

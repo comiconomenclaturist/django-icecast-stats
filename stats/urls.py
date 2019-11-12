@@ -16,13 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
-from base.views import Home, HomeD3
+from base.views import Home, HomeD3, LiveListeners
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', auth_views.LoginView.as_view()),
     path('', Home.as_view()),
     path('d3', HomeD3.as_view()),
+    path('live/', LiveListeners.as_view()),
     path('listener/', include('listener.urls')),
     path('useragent/', include('useragent.urls')),
 ]

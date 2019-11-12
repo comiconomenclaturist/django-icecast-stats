@@ -338,3 +338,4 @@ class HoursViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 		return qs.order_by('period', stream_order,)
 
 	serializer_class = HoursSerializer
+
