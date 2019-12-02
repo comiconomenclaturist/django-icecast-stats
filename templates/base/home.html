@@ -86,6 +86,14 @@
 	.daterangepicker td.available:hover, .daterangepicker th.available:hover {
 		background-color: #777 !important;
 	}
+	.info {
+		align-items: flex-start;
+	}
+	.info ul {
+		font-size: 12px;
+		list-style: none;
+		line-height: 1.5em;
+	}
 	#legend {
 		cursor: pointer;
 		float: left;
@@ -95,16 +103,12 @@
 		margin-top: 5px;
 	}
 	#live ul:before {
-		display:inline-block;
+		display: inline-block;
+		font-size: 16px;
 		content: 'LIVE NOW';
 	}
 	#legend li.hidden {
 		text-decoration: line-through;
-	}
-	#legend li, #live li {
-		list-style: none;
-		font-size: 12px;
-		line-height: 1.5em;
 	}
 	#legend li:before {
 		display:inline-block;
@@ -128,6 +132,13 @@
 	#legend li:nth-child(5):before {
 		color: #9ADF55;
 	}
+	.info a {
+		color: lightgrey;
+		text-decoration: none;
+	}
+	.info a:hover {
+		text-decoration: underline;
+	}
 
 </style>
 <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
@@ -146,9 +157,10 @@
 		</form>
 	</div>
 	<div class="cell">
-		<div id="legend">
-		</div>
-		<div id="live">
+		<div class="container info">
+			<div id="legend" class="cell"></div>
+			<div id="live" class="cell"></div>
+			<div class="cell"><ul><li><a href="/logout/?next=/">Log out</a></li></ul></div>
 		</div>
 	</div>
 </div>

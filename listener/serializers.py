@@ -61,11 +61,12 @@ class HoursSerializer(serializers.ModelSerializer):
 
 class CountriesSerializer(serializers.ModelSerializer):
 	country = CountryField(country_dict=True)
+	country__name = serializers.ReadOnlyField()
 	count = serializers.IntegerField(read_only=True)
 
 	class Meta:
 		model = Listener
-		fields = ('country', 'count',)
+		fields = ('country', 'country__name', 'count',)
 
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
