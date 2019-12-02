@@ -217,7 +217,10 @@ class CountViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 					)
 				)
 
-		return qs.order_by('period', stream_order,)
+		if qs:
+			qs = qs.order_by('period', stream_order,)
+
+		return qs
 
 	def list(self, request, *args, **kwargs):
 		listeners = Listener.objects.filter(session__overlap=self.period)
@@ -231,7 +234,7 @@ class CountViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 			listeners = listeners.filter(stream__station=self.station)
 
 		response = {
-		'results': CountSerializer(self.get_queryset(), many=True).data
+			'results': CountSerializer(self.get_queryset(), many=True).data
 		}
 		response.update({
 			'period': {
