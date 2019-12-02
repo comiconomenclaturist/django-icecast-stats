@@ -725,6 +725,7 @@
 		getBrowsers(data);
 		getCountries(data);
 		getReferers(data);
+		getLiveListeners();
 		setInterval(function(){ getLiveListeners(); }, 30000);
 	});
 	$('input[name="period"]').on('apply.daterangepicker', function() {
