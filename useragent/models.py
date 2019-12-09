@@ -38,9 +38,9 @@ class Browser(models.Model):
 
 class UserAgent(models.Model):
 	string		= models.CharField(max_length=255)
-	device		= models.ForeignKey(Device, blank=True, null=True, on_delete='CASCADE')
-	os			= models.ForeignKey(OS, blank=True, null=True, on_delete='CASCADE')
-	browser		= models.ForeignKey(Browser, blank=True, null=True, on_delete='CASCADE')
+	device		= models.ForeignKey(Device, blank=True, null=True, on_delete=models.CASCADE)
+	os			= models.ForeignKey(OS, blank=True, null=True, on_delete=models.CASCADE)
+	browser		= models.ForeignKey(Browser, blank=True, null=True, on_delete=models.CASCADE)
 	is_mobile	= models.BooleanField(default=False)
 	is_tablet	= models.BooleanField(default=False)
 	is_bot		= models.BooleanField(default=False)

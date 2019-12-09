@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
                 ('city', models.CharField(max_length=255, null=True)),
                 ('latitude', models.DecimalField(decimal_places=6, max_digits=9, null=True)),
                 ('longitude', models.DecimalField(decimal_places=6, max_digits=9, null=True)),
-                ('stream', models.ForeignKey(on_delete='PROTECT', to='listener.Stream')),
+                ('stream', models.ForeignKey(on_delete=models.PROTECT, to='listener.Stream')),
                 ('user_agent', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='useragent.UserAgent')),
             ],
             options={

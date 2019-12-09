@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('period', django.contrib.postgres.fields.ranges.DateTimeRangeField()),
                 ('count', models.PositiveIntegerField()),
                 ('duration', models.DurationField()),
-                ('stream', models.ForeignKey(on_delete='PROTECT', to='listener.Stream')),
+                ('stream', models.ForeignKey(on_delete=models.PROTECT, to='listener.Stream')),
             ],
             options={
                 'ordering': ['period'],

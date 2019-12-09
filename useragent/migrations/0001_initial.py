@@ -58,9 +58,9 @@ class Migration(migrations.Migration):
                 ('is_mobile', models.BooleanField(default=False)),
                 ('is_tablet', models.BooleanField(default=False)),
                 ('is_bot', models.BooleanField(default=False)),
-                ('browser', models.ForeignKey(blank=True, null=True, on_delete='CASCADE', to='useragent.Browser')),
-                ('device', models.ForeignKey(blank=True, null=True, on_delete='CASCADE', to='useragent.Device')),
-                ('os', models.ForeignKey(blank=True, null=True, on_delete='CASCADE', to='useragent.OS')),
+                ('browser', models.ForeignKey(blank=True, null=True, on_delete=models.CASCADE, to='useragent.Browser')),
+                ('device', models.ForeignKey(blank=True, null=True, on_delete=models.CASCADE, to='useragent.Device')),
+                ('os', models.ForeignKey(blank=True, null=True, on_delete=models.CASCADE, to='useragent.OS')),
             ],
             options={
                 'verbose_name': 'User Agent',

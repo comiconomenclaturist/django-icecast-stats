@@ -50,7 +50,7 @@ class Stream(models.Model):
 
 class Listener(models.Model):
 	ip_address	= models.GenericIPAddressField(verbose_name='IP address')
-	stream		= models.ForeignKey(Stream, on_delete='PROTECT')
+	stream		= models.ForeignKey(Stream, on_delete=models.PROTECT)
 	session		= DateTimeRangeField()
 	duration	= models.DurationField()
 	referer		= models.CharField(max_length=255)
