@@ -436,6 +436,9 @@
 			tooltips: {
 				mode: 'label',
 				callbacks: {
+					title: function(tooltipItem, data) {
+						return data.countries[tooltipItem[0].index];
+					},
 					afterLabel : function(tooltipItem, data) {
 						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
 					},
@@ -542,6 +545,7 @@
 			countriesChart.data.total = json['total'];
 			var title = countriesChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['distinct']);
 			countriesChart.options.title.text = title;
+			countriesChart.data.countries = json.results.map(function(e) { return e.country.name });
 			countriesChart.update();
 			$(countriesChart.canvas).parent().siblings().fadeOut('fast')
 		});

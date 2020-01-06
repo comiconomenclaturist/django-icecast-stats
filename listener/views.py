@@ -77,8 +77,8 @@ class GetParamsMixin(object):
 		end = self.request.query_params.get('end')
 
 		if start and end:
-			start = parser.parse(start).astimezone()
-			end = parser.parse(end).astimezone()
+			start = parser.parse(start)
+			end = parser.parse(end)
 		else:
 			end = Listener.objects.last().session.upper.astimezone().replace(minute=0, second=0) + timedelta(hours=1)
 			start = end - timedelta(days=1)
