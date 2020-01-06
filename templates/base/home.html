@@ -255,6 +255,8 @@
 	}
 
 	Chart.defaults.global.defaultFontColor = 'lightgrey';
+	Chart.defaults.scale.gridLines.color = '#555';
+	Chart.defaults.scale.gridLines.drawOnChartArea = false;
 	Chart.defaults.global.legend.position = 'right';
 	Chart.defaults.global.legend.labels.boxWidth = 10;
 	Chart.defaults.global.legend.labels.fontSize = 10;
@@ -327,11 +329,6 @@
 							fontSize: 10,
 						},
 						offset: true,
-						gridLines: {
-							display: true,
-							drawOnChartArea: false,
-							color: '#555',
-						},
 					}],
 					yAxes: [{
 						stacked: true,
@@ -343,11 +340,6 @@
 									return label;
 								}
 							},
-						},
-						gridLines: {
-							display: true,
-							drawOnChartArea: false,
-							color: '#555',
 						},
 					}]
 				},
@@ -393,22 +385,12 @@
 							fontSize: 10,
 						},
 						offset: true,
-						gridLines: {
-							display: true,
-							drawOnChartArea: false,
-							color: '#555',
-						},
 					}],
 					yAxes: [{
 						stacked: true,
 						ticks: {
 							fontSize: 10,
 							beginAtZero: true,
-						},
-						gridLines: {
-							display: true,
-							drawOnChartArea: false,
-							color: '#555',
 						},
 					}]
 				},
@@ -472,16 +454,10 @@
 							}
 						},
 					},
-					gridLines: {
-						display: true,
-						drawOnChartArea: false,
-						color: '#555',
-					},
 				}],
 				yAxes: [{
 					gridLines: {
 						display: false,
-
 					},
 				}]
 			},
@@ -526,11 +502,6 @@
 								return label;
 							}
 						},
-					},
-					gridLines: {
-						display: true,
-						drawOnChartArea: false,
-						color: '#555',
 					},
 				}],
 				yAxes: [{
@@ -733,13 +704,6 @@
 		});
 	}
 
-	function changeURL() {
-		var station = $('#id_station').val();
-		var start = moment($('#id_period').val().split(' - ')[0]).toISOString();
-		var end = moment($('#id_period').val().split(' - ')[1]).toISOString();
-		window.history.pushState("object or string", "Title", "/?start=" + start + "&end=" + end + "&station=" + station);
-	};
-
 	function getLiveListeners() {
 		$.get('/live/', function(json) {
 			$('#live').html('<ul></ul>');
@@ -749,76 +713,42 @@
 		});
 	}
 
+	function getData(url) {
+		if (url) {
+			var params = {
+				station: url.searchParams.get("station"),
+				region: url.searchParams.get("region"),
+				start: url.searchParams.get("start"),
+				end: url.searchParams.get("end"),
+			}
+		} else {
+			var params = {
+				station: $('#id_station').val(),
+				start: moment($('#id_period').val().split(' - ')[0]).toISOString(),
+				end: moment($('#id_period').val().split(' - ')[1]).toISOString(),
+				region: $('#id_region').val(),
+			}
+			window.history.pushState("object or string", "Title", "?" + $.param(params))
+		}
+		getCount(params);
+		getHours(params);
+		getBrowsers(params);
+		getCountries(params);
+		getReferers(params);
+	}
+
 	$(document).ready(function(){
 		var url = new URL(window.location.href);
-		var data = {
-			station: url.searchParams.get("station"),
-			start: url.searchParams.get("start"),
-			end: url.searchParams.get("end"),
-		}
-		getCount(data);
-		getHours(data);
-		getBrowsers(data);
-		getCountries(data);
-		getReferers(data);
+		getData(url);
 		getLiveListeners();
 		setInterval(function(){ getLiveListeners(); }, 30000);
 	});
+
 	$('input[name="period"]').on('apply.daterangepicker', function() {
-		getCount({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getHours({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getBrowsers({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getCountries({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getReferers({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		changeURL();
+		getData();
 	});
-	$('select[name="station"]').change(function() {
-		getCount({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getHours({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getBrowsers({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getCountries({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		getReferers({
-			station: $('#id_station').val(),
-			start: $('#id_period').val().split(' - ')[0],
-			end: $('#id_period').val().split(' - ')[1],
-		});
-		changeURL();
+	$('#id_station, #id_region').change(function() {
+		getData();
 	});
 
 </script>

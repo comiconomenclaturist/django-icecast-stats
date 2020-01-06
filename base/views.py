@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views import View, generic
 from django.http import JsonResponse
-from listener.models import Listener, Station, Stream
+from listener.models import Listener, Station, Stream, Region
 from listener.forms import ListenerForm
 from stats.secret import ICECAST_AUTH
 import xml.etree.ElementTree as ET
@@ -10,12 +10,20 @@ import requests
 
 class Home(generic.FormView):
 	def get(self, request, *args, **kwargs):
-		form = ListenerForm()
+		station = Station.objects.filter(id=request.GET.get('station') or 0).first()
+		region = Region.objects.filter(id=request.GET.get('region') or 0).first()
+
+		form = ListenerForm(initial={
+			'station': station, 
+			'region': region,
+			})
+		
 		context = {
 			'form': form,
 			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %I:%m%p'),
 			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %I:%m%p'),
 			}
+		
 		return render(request, 'base/home.html', context)
 
 

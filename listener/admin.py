@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Stream, Station, Listener, IngestParameters
+from .models import *
 
 
 class ListenerAdmin(admin.ModelAdmin):
@@ -18,7 +18,15 @@ class StationAdmin(admin.ModelAdmin):
 	list_display = ('name',)
 
 
+class CountryInline(admin.TabularInline):
+	model = Country
+
+class RegionAdmin(admin.ModelAdmin):
+	inlines = [CountryInline,]
+
+
 admin.site.register(Stream, StreamAdmin)
 admin.site.register(Station, StationAdmin)
 admin.site.register(Listener, ListenerAdmin)
+admin.site.register(Region, RegionAdmin)
 admin.site.register(IngestParameters)

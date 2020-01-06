@@ -89,6 +89,12 @@ class GetParamsMixin(object):
 	def station(self):
 		return self.request.query_params.get('station') or 'A'
 
+	@property
+	def region(self):
+		if self.request.query_params.get('region'):
+			return Region.objects.get(id=self.request.query_params.get('region'))
+		return None
+
 
 class ListenerQuerySetMixin(GetParamsMixin):
 	def get_queryset(self):
@@ -96,6 +102,9 @@ class ListenerQuerySetMixin(GetParamsMixin):
 
 		if self.station != 'A':
 			queryset = queryset.filter(stream__station=self.station)
+
+		if self.region:
+			queryset = queryset.filter(country__in=self.region.countries.values('country'))
 
 		return queryset.values(self.field).annotate(count=Count('*')).order_by('-count')
 
@@ -144,28 +153,15 @@ class CountriesViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 	serializer_class = CountriesSerializer
 
 
-# class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
-# 	def get_queryset(self):
-# 		self.direct = super().get_queryset().filter(referer='')[0]['count']
-# 		qs = super().get_queryset().filter(referer__gt='')
-# 		return qs
-
-# 	def list(self, request, *args, **kwargs):
-# 		response = super(RefererViewSet, self).list(request, args, kwargs)
-# 		response.data['total'] = self.get_queryset().aggregate(Sum('count')).get('count__sum')
-# 		response.data['direct'] = self.direct
-# 		return response
-
-# 	field = 'referer'
-# 	serializer_class = RefererSerializer
-
-
 class RefererViewSet(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
 		qs = Listener.objects.filter(session__overlap=self.period)
 
 		if self.station != 'A':
 			qs = qs.filter(stream__station=self.station)
+
+		if self.region:
+			qs = qs.filter(country__in=self.region.countries.values('country'))
 
 		self.direct = qs.filter(referer='').count()
 
@@ -203,6 +199,9 @@ class CountViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 			stream_order = 'stream'
 			listeners = Listener.objects.filter(stream__station=self.station)
 
+		if self.region:
+			listeners = listeners.filter(country__in=self.region.countries.values('country'))
+
 		for date_range in self.date_ranges:
 			qs = qs.union(
 				listeners.filter(
@@ -232,6 +231,9 @@ class CountViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 			streams = 'stream__mountpoint'
 			stream_order = 'stream'
 			listeners = listeners.filter(stream__station=self.station)
+
+		if self.region:
+			listeners = listeners.filter(country__in=self.region.countries.values('country'))
 
 		response = {
 			'results': CountSerializer(self.get_queryset(), many=True).data
@@ -317,6 +319,9 @@ class HoursViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 			streams = 'stream__mountpoint'
 			stream_order = 'stream'
 			listeners = Listener.objects.filter(stream__station=self.station)
+
+		if self.region:
+			listeners = listeners.filter(country__in=self.region.countries.values('country'))
 
 		for date_range in self.date_ranges:
 			qs = qs.union(

@@ -79,4 +79,20 @@ class Listener(models.Model):
 		return self.ip_address
 
 
-	
+class Region(models.Model):
+	name = models.CharField(max_length=127)
+
+	def __str__(self):
+		return self.name
+
+
+class Country(models.Model):
+	country = CountryField(null=True)
+	region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name='countries')
+
+	class Meta:
+		verbose_name_plural = 'Countries'
+
+	def __str__(self):
+		return self.country.code
+
