@@ -160,11 +160,12 @@ try:
 			aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
 			)
 
-		# upload = s3.put_object(
-		# 	Bucket=settings.AWS_STATS_BUCKET,
-		# 	Key=s3_path,
-		# 	Body=filepath
-		# 	)
+		if not settings.DEBUG:
+			upload = s3.put_object(
+				Bucket=settings.AWS_STATS_BUCKET,
+				Key=s3_path,
+				Body=filepath
+				)
 
 
 except Exception:

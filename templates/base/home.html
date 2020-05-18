@@ -19,7 +19,7 @@
 		padding: 10px;
 		background-color: rgb(40, 40, 40);
 	}
-	.container .cell h1 {
+	.container .cell h1 a {
 		padding: 10px;
 	}
 	.container .cell .overlay {
@@ -56,20 +56,25 @@
 			width: 100%;
 		}
 	}
+	form {
+		font-size: 12px;
+	}
+	form input, form label {
+		display: block;
+	}
+	form div {
+		float: left;
+	}
 	form input, form select{
 		margin: 10px;
 		padding: 3px 10px;
 		height: 20px;
 		font-family: 'Open Sans', sans-serif;
-		font-size: 12px;
 		background-color: #ddd;
 		border: none;
 	}
 	form select {
 		height: 25px;
-	}
-	.minuteselect {
-		display: none;
 	}
 	.daterangepicker {
 		background-color: #666 !important;
@@ -159,7 +164,7 @@
 	#legend li:nth-child(5):before {
 		color: #9ADF55;
 	}
-	.info a {
+	a {
 		color: lightgrey;
 		text-decoration: none;
 	}
@@ -176,10 +181,11 @@
 
 <div class="container">
 	<div class="cell">
-		<h1>Resonance Streaming Stats</h1>
+		<h1><a href="/">Resonance Streaming Stats</a></h1>
 	</div>
 	<div class="cell">
 		<form method="GET" action="/">
+			<section>
 			{{ form }}
 		</form>
 	</div>
@@ -217,12 +223,11 @@
 
 <script type="text/javascript">
 	var period = '{{request.GET.period}}' || '{{min_date}}' + ' - ' + '{{max_date}}';
-	var station = '{{request.GET.station}}';
 	var start = period.split(' - ')[0];
 	var end = period.split(' - ')[1];
 	var countTotals = [];
 
-	$('#id_period').daterangepicker({
+	$('#id_datepicker').daterangepicker({
 		showDropdowns: true,
 		maxSpan: {
 			"years": 10,
@@ -245,6 +250,25 @@
 		endDate: period.split(' - ')[1],
 		minDate: '{{min_date}}',
 		maxDate: '{{max_date}}',
+	},
+	function(start, end, label) {
+  		console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+  	});
+  	$('#id_datepicker').on('show.daterangepicker', function(e, datepicker) {
+		$(datepicker.container).find('.minuteselect').hide();
+	});
+
+	$('#id_slot').daterangepicker({
+		datePicker: false,
+		timePicker: true,
+    	timePickerIncrement: 15,
+    	timePicker24Hour: true,
+    	locale: {
+			format: 'HH:mm'
+		},
+	})
+	$('#id_slot').on('show.daterangepicker', function(e, datepicker) {
+		$(datepicker.container).find('.calendar-table').hide();
 	});
 
 	var defaultLegendClickHandler = Chart.defaults.global.legend.onClick;
@@ -624,8 +648,8 @@
 
 			var start = moment(json.period.start).format('YYYY/MM/DD HH');
 			var end = moment(json.period.end).format('YYYY/MM/DD HH');
-			$('#id_period').data('daterangepicker').setStartDate(start);
-			$('#id_period').data('daterangepicker').setEndDate(end);
+			$('#id_datepicker').data('daterangepicker').setStartDate(start);
+			$('#id_datepicker').data('daterangepicker').setEndDate(end);
 
 			var legendContainer = document.getElementById("legend");
 			legendContainer.innerHTML = listenerCountChart.generateLegend();
@@ -669,8 +693,8 @@
 
 			var start = moment(json.results[0].period).format('YYYY/MM/DD HH');
 			var end = moment(json.results[json.results.length-1].period).format('YYYY/MM/DD HH');
-			$('#id_period').data('daterangepicker').setStartDate(start);
-			$('#id_period').data('daterangepicker').setEndDate(end);
+			$('#id_datepicker').data('daterangepicker').setStartDate(start);
+			$('#id_datepicker').data('daterangepicker').setEndDate(end);
 		});
 	}
 
@@ -717,23 +741,14 @@
 		});
 	}
 
-	function getData(url) {
-		if (url) {
-			var params = {
-				station: url.searchParams.get("station"),
-				region: url.searchParams.get("region"),
-				start: url.searchParams.get("start"),
-				end: url.searchParams.get("end"),
-			}
-		} else {
-			var params = {
-				station: $('#id_station').val(),
-				start: moment($('#id_period').val().split(' - ')[0]).toISOString(),
-				end: moment($('#id_period').val().split(' - ')[1]).toISOString(),
-				region: $('#id_region').val(),
-			}
-			window.history.pushState("object or string", "Title", "?" + $.param(params))
+	function getData(params) {
+		if (!(params)) {
+			params = $("form *:not([name$=picker]").filter(function(index, element) {
+				return $(element).val() != '';
+			}).serialize();
 		}
+		window.history.pushState("object or string", "Title", "?" + params)
+
 		getCount(params);
 		getHours(params);
 		getBrowsers(params);
@@ -742,13 +757,30 @@
 	}
 
 	$(document).ready(function(){
-		var url = new URL(window.location.href);
-		getData(url);
+		$('#id_dow').change(function() {
+			$('#id_dom').toggle($(this).val() != '');
+			$('#id_slot').toggle($(this).val() != '');
+			if ($(this).val() == 0) {
+				$('#id_slot').val('');
+			}
+		}).change();
+		$('#id_dom').change(function() {
+			$('#dow span').toggle($(this).val() > 0);
+		}).change();
+		var params = window.location.search.substr(1);
+		getData(params);
 		getLiveListeners();
-		setInterval(function(){ getLiveListeners(); }, 30000);
+		// setInterval(function(){ getLiveListeners(); }, 30000);
 	});
 
-	$('input[name="period"]').on('apply.daterangepicker', function() {
+	$('input[name="datepicker"]').on('apply.daterangepicker', function() {
+		$('#id_period_0').val(this.value.split(' - ')[0])
+		$('#id_period_1').val(this.value.split(' - ')[1])
+		getData();
+	});
+	$('input[name="slot"]').on('apply.daterangepicker', function() {
+		// $('#id_slot_0').val(this.value.split(' - ')[0])
+		// $('#id_slot_1').val(this.value.split(' - ')[1])
 		getData();
 	});
 	$('#id_station, #id_region').change(function() {

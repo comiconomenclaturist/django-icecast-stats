@@ -22,17 +22,6 @@ class StreamSerializer(serializers.ModelSerializer):
 		fields = ('mountpoint',)
 
 
-class AggregateStreamSerializer(serializers.Serializer):
-	mountpoint = serializers.CharField()
-	count = serializers.IntegerField()
-	hours = serializers.FloatField()
-	
-
-class AggregateSerializer(serializers.Serializer):
-	period = serializers.DateTimeField()
-	stream = AggregateStreamSerializer(many=True)
-
-
 class DateTimeTZField(serializers.DateTimeField):
 	def to_representation(self, value):
 		value = timezone.localtime(value)

@@ -12,16 +12,20 @@ class Home(generic.FormView):
 	def get(self, request, *args, **kwargs):
 		station = Station.objects.filter(id=request.GET.get('station') or 0).first()
 		region = Region.objects.filter(id=request.GET.get('region') or 0).first()
+		dom = request.GET.get('dom') or ''
+		dow = request.GET.get('dow') or ''
 
 		form = ListenerForm(initial={
 			'station': station, 
 			'region': region,
+			'dom': dom,
+			'dow': dow,
 			})
 		
 		context = {
 			'form': form,
-			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %I:%m%p'),
-			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %I:%m%p'),
+			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %H:%M'),
+			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %H:%M'),
 			}
 		
 		return render(request, 'base/home.html', context)
@@ -32,8 +36,8 @@ class HomeD3(generic.FormView):
 		form = ListenerForm()
 		context = {
 			'form': form,
-			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %I:%m%p'),
-			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %I:%m%p'),
+			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %H:%M'),
+			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %H:%M'),
 			}
 		return render(request, 'base/d3.html', context)
 

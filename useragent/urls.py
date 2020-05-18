@@ -4,6 +4,6 @@ from .views import *
 app_name = 'useragent'
 
 urlpatterns = [
-	path('browsers/', Browsers.as_view({'get': 'list'})),
+	path('browsers/', BrowsersViewSet.as_view({'get': 'list'})),
 ]
 
