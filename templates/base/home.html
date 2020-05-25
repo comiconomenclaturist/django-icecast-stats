@@ -625,9 +625,13 @@
 		setInterval(function(){ getLiveListeners(); }, 30000);
 	});
 
-	$('input[name="datepicker"], input[name="slot"]').on('apply.daterangepicker', function() {
+	$('input[name="datepicker"]').on('apply.daterangepicker', function() {
+		$('#id_period_0').val(this.value.split(' - ')[0])
+		$('#id_period_1').val(this.value.split(' - ')[1])
 		getData();
 	});
+	$('input[name="slot"]').on('apply.daterangepicker', function() {
+		getData();
 	$('#id_station, #id_region').change(function() {
 		getData();
 	});
