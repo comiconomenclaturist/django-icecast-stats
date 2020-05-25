@@ -21,22 +21,14 @@ DOM_CHOICES = (
 	('4', '4th'),
 	)
 
-# class ListenerForm(forms.Form):
-# 	station = forms.ModelChoiceField(queryset=Station.objects.all(), required=False)
-# 	region 	= forms.ModelChoiceField(queryset=Region.objects.all(), required=False)
-# 	period 	= forms.CharField(widget=forms.TextInput(attrs={'size': 28}))
-# 	dom 	= forms.ChoiceField(choices=DOM_CHOICES, label='', required=False)
-# 	dow		= forms.ChoiceField(choices=DOW_CHOICES, label='', required=False)
-# 	slot 	= forms.CharField(widget=forms.TextInput(attrs={'size': 28}), label='From', required=False)
-
 
 class ListenerForm(forms.Form):
 	station 	= forms.ModelChoiceField(queryset=Station.objects.all(), required=False)
 	region 		= forms.ModelChoiceField(queryset=Region.objects.all(), required=False)
 	datepicker	= forms.CharField(label='Period', widget=forms.TextInput(attrs={'size': 28},), required=False)
 	period		= DateTimeRangeField(widget=forms.widgets.SplitHiddenDateTimeWidget())
-	dom 		= forms.ChoiceField(label='', choices=DOM_CHOICES, required=False)
-	dow			= forms.ChoiceField(label='', choices=DOW_CHOICES, required=False)
+	dom 		= forms.ChoiceField(label='Occurrence', choices=DOM_CHOICES, required=False)
+	dow			= forms.ChoiceField(label='Weekday', choices=DOW_CHOICES, required=False)
 	# timepicker	= forms.CharField(label='', widget=forms.TextInput(attrs={'size': 28},), required=False)
 	# slot		= DateTimeRangeField(widget=forms.widgets.SplitHiddenDateTimeWidget())
-	slot		= forms.CharField(label='', widget=forms.TextInput(attrs={'size': 28},), required=False)
+	slot		= forms.CharField(widget=forms.TextInput(attrs={'size': 28},), required=False)

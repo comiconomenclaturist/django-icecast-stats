@@ -4,196 +4,48 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<style>
-	.container {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-	}
-	.container .cell {
-		position: relative;
-		width: calc(33% - 10px);
-		margin: 5px;
-	}
-	.container .cell .canvas {
-		padding: 10px;
-		background-color: rgb(40, 40, 40);
-	}
-	.container .cell h1 a {
-		padding: 10px;
-	}
-	.container .cell .overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		background-color: rgba(125, 125, 125, 0.5);
-		border-radius: 5px;
-		width: 100%;
-		height: 100%;
-	}
-	.container .cell .overlay .loader {
-		border: 15px solid rgba(0, 0, 0, 0.3);
-		border-top: 15px solid rgba(250, 200, 50, 0.6);
-		border-radius: 50%;
-		width: 100px;
-		height: 100px;
-		margin: auto;
-		position: absolute;
-		top: 0; left: 0; bottom: 0; right: 0;
-		animation: spin 2s linear infinite;
-	}
-	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
-	}
-	@media only screen and (max-width: 1200px) {
-		.container .cell {
-			width: calc(50% - 10px);
-		}
-	}
-	@media only screen and (max-width: 720px) {
-		.container .cell {
-			width: 100%;
-		}
-	}
-	form {
-		font-size: 12px;
-	}
-	form input, form label {
-		display: block;
-	}
-	form div {
-		float: left;
-	}
-	form input, form select{
-		margin: 10px;
-		padding: 3px 10px;
-		height: 20px;
-		font-family: 'Open Sans', sans-serif;
-		background-color: #ddd;
-		border: none;
-	}
-	form select {
-		height: 25px;
-	}
-	.daterangepicker {
-		background-color: #666 !important;
-		border-color: #000 !important;
-		font: inherit !important;
-	}
-	.daterangepicker .cancelBtn {
-		display: none;
-	}
-	.daterangepicker .applyBtn {
-		font: inherit !important;
-		text-transform: uppercase;
-		border: solid 1px #666;
-	}
-	.calendar-table {
-		background-color: #333 !important;
-		border-color: #222 !important;
-	}
-	.daterangepicker .in-range {
-		background-color: orange !important;
-	}
-	.daterangepicker .off.ends {
-		background-color: #444 !important;
-	}
-	.daterangepicker .disabled {
-		background-color: #222 !important;
-	}
-	.daterangepicker td.available:hover, .daterangepicker th.available:hover {
-		background-color: #777 !important;
-	}
-	.daterangepicker .ranges {
-		background-color: #333;
-		margin-left: 8px !important;
-	}
-	.daterangepicker .ranges li:hover {
-		color: #222;
-	}
-	.daterangepicker.show-ranges.ltr .drp-calendar.left {
-  		border-left: none !important;
-	}
-	.daterangepicker .drp-buttons {
-		border-top: none !important;
-	}
-	.info {
-		align-items: flex-start;
-	}
-	.info ul {
-		font-size: 12px;
-		list-style: none;
-		line-height: 1.5em;
-	}
-	#legend {
-		cursor: pointer;
-		float: left;
-	}
-	#live {
-		float: right;
-		margin-top: 5px;
-	}
-	#live ul:before {
-		display: inline-block;
-		font-size: 16px;
-		content: 'LIVE NOW';
-	}
-	#legend li.hidden {
-		text-decoration: line-through;
-	}
-	#legend li:before {
-		display:inline-block;
-		content: "\25A0";
-		font-size: 200%;
-		vertical-align: -2px;
-		padding-right: 5px;
-	}
-	#legend li:nth-child(1):before {
-		color: #FF4E67;
-	}
-	#legend li:nth-child(2):before {
-		color: #F77D50;
-	}
-	#legend li:nth-child(3):before {
-		color: #EFBD52;
-	}
-	#legend li:nth-child(4):before {
-		color: #DAE753;
-	}
-	#legend li:nth-child(5):before {
-		color: #9ADF55;
-	}
-	a {
-		color: lightgrey;
-		text-decoration: none;
-	}
-	.info a:hover {
-		text-decoration: underline;
-	}
 
-</style>
 <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
 <script src="{% static 'js/moment.js' %}"></script>
 <script src="{% static 'js/chart.js@2.8.0' %}"></script>
 <script src="{% static 'libs/daterangepicker/daterangepicker.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'libs/daterangepicker/daterangepicker.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 
-<div class="container">
-	<div class="cell">
+<div class="header">
+	<div class="item">
 		<h1><a href="/">Resonance Streaming Stats</a></h1>
 	</div>
-	<div class="cell">
+	<div class="item">
 		<form method="GET" action="/">
-			<section>
-			{{ form }}
+			{% for field in form.hidden_fields %}
+				{{ field }}
+			{% endfor %}
+			<div>
+				{% for field in form.visible_fields %}
+					<div class="cell">
+						<label>{{ field.label }}</label>
+						<div class="{{ field.field.widget.input_type }}">
+							{{ field }}
+							{% if field.field.widget.input_type == "select" %}
+								<span class="select-icon">&#9660;</span>
+							{% endif %}
+						</div>
+					</div>
+					{% if forloop.counter == 3 %}
+						</div><div>
+					{% endif %}
+				{% endfor %}
+			</div>
 		</form>
 	</div>
-	<div class="cell">
-		<div class="container info">
-			<div id="legend" class="cell"></div>
-			<div id="live" class="cell"></div>
-			<div class="cell"><ul><li><a href="/logout/?next=/">Log out</a></li></ul></div>
+	<div class="item">
+		<div class="info">
+			<div id="legend"></div>
+			<div>
+				<div id="live"></div>
+				<p class="upper"><a href="/logout/?next=/">Log out</a></p>
+			</div>
 		</div>
 	</div>
 </div>
@@ -758,10 +610,11 @@
 
 	$(document).ready(function(){
 		$('#id_dow').change(function() {
-			$('#id_dom').toggle($(this).val() != '');
-			$('#id_slot').toggle($(this).val() != '');
-			if ($(this).val() == 0) {
+			if ($(this).val() == '') {
 				$('#id_slot').val('');
+				$('#id_dom, #id_slot').prop('disabled', true).closest('.cell').addClass('disabled');
+			} else {
+				$('#id_dom, #id_slot').prop('disabled', false).closest('.cell').removeClass('disabled');
 			}
 		}).change();
 		$('#id_dom').change(function() {

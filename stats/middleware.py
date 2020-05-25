@@ -7,7 +7,7 @@ class AuthRequiredMiddleware(object):
 	def __call__(self, request):
 		# Code to be executed for each request before the view (and later middleware) are called.
 		if not request.user.is_authenticated and request.path != '/login/':
-			return HttpResponseRedirect('/login/?next=%s' % request.path)
+			return HttpResponseRedirect('/login/?next=%s' % request.get_full_path())
 
 		# Code to be executed for each request/response after the view is called.
 		response = self.get_response(request)

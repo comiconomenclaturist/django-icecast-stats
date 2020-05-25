@@ -10,17 +10,7 @@ import requests
 
 class Home(generic.FormView):
 	def get(self, request, *args, **kwargs):
-		station = Station.objects.filter(id=request.GET.get('station') or 0).first()
-		region = Region.objects.filter(id=request.GET.get('region') or 0).first()
-		dom = request.GET.get('dom') or ''
-		dow = request.GET.get('dow') or ''
-
-		form = ListenerForm(initial={
-			'station': station, 
-			'region': region,
-			'dom': dom,
-			'dow': dow,
-			})
+		form = ListenerForm(request.GET)
 		
 		context = {
 			'form': form,
