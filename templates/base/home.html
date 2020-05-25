@@ -623,17 +623,10 @@
 		var params = window.location.search.substr(1);
 		getData(params);
 		getLiveListeners();
-		// setInterval(function(){ getLiveListeners(); }, 30000);
+		setInterval(function(){ getLiveListeners(); }, 30000);
 	});
 
-	$('input[name="datepicker"]').on('apply.daterangepicker', function() {
-		$('#id_period_0').val(this.value.split(' - ')[0])
-		$('#id_period_1').val(this.value.split(' - ')[1])
-		getData();
-	});
-	$('input[name="slot"]').on('apply.daterangepicker', function() {
-		// $('#id_slot_0').val(this.value.split(' - ')[0])
-		// $('#id_slot_1').val(this.value.split(' - ')[1])
+	$('input[name="datepicker"], input[name="slot"]').on('apply.daterangepicker', function() {
 		getData();
 	});
 	$('#id_station, #id_region').change(function() {
