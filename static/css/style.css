@@ -140,6 +140,9 @@ form .cell .select {
 	background-color: #333;
 	margin-left: 8px !important;
 }
+.daterangepicker .ranges li {
+	padding: 5px 8px !important;
+}
 .daterangepicker .ranges li:hover {
 	color: #222;
 }

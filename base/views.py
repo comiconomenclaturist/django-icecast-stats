@@ -36,8 +36,8 @@ class LiveListeners(View):
 	def get(self, request, *args, **kwargs):
 		live_listeners = {station: 0 for station in Station.objects.values_list('name', flat=True)}
 
-		url = 'http://%s:%s/admin/listmounts' % (ICECAST_AUTH['host'], ICECAST_AUTH['port'])
-		r = requests.get(url, auth=(ICECAST_AUTH['username'], ICECAST_AUTH['password']))
+		url = f'{ICECAST_AUTH["protocol"]}://{ICECAST_AUTH["host"]}:{ICECAST_AUTH["port"]}/admin/listmounts'
+		r = requests.get(url, verify=True, auth=(ICECAST_AUTH['username'], ICECAST_AUTH['password']))
 		tree = ET.fromstring(r.text)
 		sources = tree.findall('source')
 

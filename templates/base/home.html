@@ -94,7 +94,10 @@
 			'Last 7 Days': [moment().subtract(7, 'days').startOf('day'), moment().startOf('day')],
 			'Last 30 Days': [moment().subtract(30, 'days').startOf('day'), moment().startOf('day')],
 			'This Month': [moment().startOf('month'), moment().add(1, 'month').startOf('month')],
-			'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().startOf('month')]
+			'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().startOf('month')],
+			'This Month Last Year': [moment().startOf('month').subtract(1, 'year'), moment().subtract(1, 'year')],
+			'This Year': [moment().startOf('year'), moment()],
+			'This Year Last Year': [moment().startOf('year').subtract(1, 'year'), moment().subtract(1, 'year')],
 		},
 		alwaysShowCalendars: true,
 		startDate: period.split(' - ')[0],
