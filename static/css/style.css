@@ -63,13 +63,13 @@ form label {
 form div {
 	float: left;
 }
-form input, form select {
+form input, form select, .daterangepicker select {
 	margin: 5px;
 	padding: 3px 10px;
 	font-family: 'Open Sans', sans-serif;
-	background-color: #444;
+	background-color: #444 !important;
 	color: inherit;
-	border: none;
+	border: none !important;
 	transition: all 0.1s;
 }
 form input {
@@ -78,7 +78,7 @@ form input {
 form .cell.disabled {
 	color: gray;
 }
-form select {
+form select,  .daterangepicker select {
 	height: 26px;
 	padding-right: 50px;
 	appearance: none;
@@ -92,9 +92,11 @@ select::-ms-expand {
 form input:not(:disabled):hover,
 form input:not(:disabled):focus,
 form select:not(:disabled):not(:disabled):hover,
-form select:not(:disabled):focus {
-	cursor: pointer;
-	background-color: #555;
+form select:not(:disabled):focus,
+.daterangepicker select:hover,
+.daterangepicker select:focus {
+	cursor: pointer !important;
+	background-color: #555 !important;
 	color: #eee;
 }
 form .cell .select {
@@ -108,20 +110,25 @@ form .cell .select {
 	transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 .daterangepicker {
-	background-color: #666 !important;
-	border-color: #000 !important;
+	background-color: rgb(55,55,55) !important;
+	border: none !important;
 	font: inherit !important;
 }
 .daterangepicker .cancelBtn {
 	display: none;
 }
 .daterangepicker .applyBtn {
+	background: #222 !important;
+	color: lightgray;
 	font: inherit !important;
 	text-transform: uppercase;
-	border: solid 1px #666;
+	border: none !important;
+}
+.daterangepicker .applyBtn:hover {
+	cursor: pointer;
 }
 .calendar-table {
-	background-color: #333 !important;
+	background-color: rgb(45,45,45) !important;
 	border-color: #222 !important;
 }
 .daterangepicker .in-range {
@@ -133,11 +140,14 @@ form .cell .select {
 .daterangepicker .disabled {
 	background-color: #222 !important;
 }
+.daterangepicker th.available span {
+  border-color: #aaa !important;
+}
 .daterangepicker td.available:hover, .daterangepicker th.available:hover {
 	background-color: #777 !important;
 }
 .daterangepicker .ranges {
-	background-color: #333;
+	background-color: rgb(45, 45, 45);
 	margin-left: 8px !important;
 }
 .daterangepicker .ranges li {

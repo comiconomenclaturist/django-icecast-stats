@@ -89,7 +89,7 @@ class DateRangesMixin(GetParamsMixin):
 			elif rd.days or rd.hours > 12:
 				rr = rrule(HOURLY, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(hours=1)
-			elif d.hours > 6:
+			elif rd.hours > 6:
 				rr = rrule(MINUTELY, interval=30, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(minutes=30)
 			else:
