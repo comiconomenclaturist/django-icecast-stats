@@ -185,6 +185,14 @@
 				tooltips: {
 					mode: 'x',
 					callbacks: {
+						title: function(tooltipItem, data) {
+							times = new Set(data.datasets[0].data.map(function(e) { return e.x.toLocaleTimeString() }));
+							if (times.size > 1) {
+								return tooltipItem[0].xLabel;
+							} else {
+								return tooltipItem[0].xLabel.split('–')[0];
+							}
+						},
 						afterLabel: function(tooltipItem, data) {
 							window.total = 0;
 							for(i=0; i < data.datasets.length; i++) {
@@ -241,6 +249,14 @@
 				tooltips: {
 					mode: 'x',
 					callbacks: {
+						title: function(tooltipItem, data) {
+							times = new Set(data.datasets[0].data.map(function(e) { return e.x.toLocaleTimeString() }));
+							if (times.size > 1) {
+								return tooltipItem[0].xLabel;
+							} else {
+								return tooltipItem[0].xLabel.split('–')[0];
+							}
+						},
 						afterLabel : function(tooltipItem, data) {
 							window.total = 0;
 							for(i=0; i < data.datasets.length; i++) {
