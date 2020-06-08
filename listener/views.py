@@ -7,7 +7,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from datetime import datetime, timedelta
 from dateutil import relativedelta, parser
-from dateutil.rrule import rrule, WEEKLY, MONTHLY, MO, TU, WE, TH, FR, SA, SU
+from dateutil.rrule import MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY
+from dateutil.rrule import rrule, rruleset, MO, TU, WE, TH, FR, SA, SU
 from .models import Listener
 from .serializers import *
 from listener.forms import *
@@ -67,31 +68,41 @@ class DateRangesMixin(GetParamsMixin):
 				date_ranges.append(DateTimeTZRange(date, date + delta))
 
 		else:
-			rd = relativedelta.relativedelta(self.period.upper, self.period.lower)
+			start, end = self.period.lower.replace(tzinfo=None), self.period.upper.replace(tzinfo=None)
+			rd = relativedelta.relativedelta(end, start)
 
 			if rd.years > 1:
+				rr = rrule(YEARLY, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(years=1)
 			elif rd.years or rd.months > 6:
+				rr = rrule(MONTHLY, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(months=1)
 			elif rd.months > 1:
+				rr = rrule(WEEKLY, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(weeks=1)
 			elif rd.months or rd.days >= 7:
+				rr = rrule(DAILY, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(days=1)
 			elif rd.days > 1:
+				rr = rrule(HOURLY, interval=2, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(hours=2)
 			elif rd.days or rd.hours > 12:
+				rr = rrule(HOURLY, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(hours=1)
-			elif rd.hours > 6:
+			elif d.hours > 6:
+				rr = rrule(MINUTELY, interval=30, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(minutes=30)
 			else:
+				rr = rrule(MINUTELY, interval=15, dtstart=start, until=end)
 				delta = relativedelta.relativedelta(minutes=15)
 
-			start, end = self.period.lower, self.period.upper
+			# Make a ruleset, add the rule from above and exclude the upper datetime bound
+			rrset = rruleset()
+			rrset.rrule(rr)
+			rrset.exdate(end)
 
-			while start < end:
-				interval = start + delta
-				date_ranges.append(DateTimeTZRange(start, interval))
-				start = interval
+			# Convert the rrule list to DateTimeTZRanges in local timezone
+			date_ranges = [DateTimeTZRange(dt.astimezone(), (dt+delta).astimezone()) for dt in rrset]
 
 		return date_ranges
 
