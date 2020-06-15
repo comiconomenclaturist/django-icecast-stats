@@ -168,6 +168,23 @@
 		});
 	}
 
+	function graphClickEvent(event, array) {
+		if (array[0]) {
+			var index = array[0]._index;
+			var start = new Date(array[0]._xScale._timestamps.data[index]);
+			if (index == (array[0]._xScale._timestamps.data.length -1)) {
+				var end = $('#id_datepicker').data('daterangepicker').endDate._d
+			} else {
+				var end = new Date(array[0]._xScale._timestamps.data[index+1]);
+			}
+			if (end - start > 900000 ) { // 15 minutes minimum interval
+				$('#id_datepicker').data('daterangepicker').setStartDate(start);
+				$('#id_datepicker').data('daterangepicker').setEndDate(end);
+				$('.applyBtn')[0].click();
+			}
+		}
+	}
+
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
 	var listenerCountChart = new Chart(listenerCountId, {
 		type: 'bar',
@@ -229,6 +246,33 @@
 						},
 					}]
 				},
+				hover: {
+					onHover: function(e, el) {
+						$('#listenerCount').css("cursor", el[0] ? "pointer" : "default");
+					}
+				},
+				onClick: graphClickEvent,
+				// animation: {
+				// 	onComplete: function(tooltipItem, data) {
+				// 		var chartInstance = this.chart;
+				// 		var ctx = chartInstance.ctx;
+				// 		var height = chartInstance.controller.boxes[0].maxHeight;
+				// 		ctx.save();
+				// 		ctx.font = '10px Verdana';
+				// 		ctx.fillStyle = '#222';
+				// 		ctx.textAlign = 'right'; 
+				// 		ctx.rotate(90 * Math.PI / 180); // 90 degree rotation
+				// 		Chart.helpers.each(this.data.datasets.forEach(function (dataset, i) {
+				// 			var meta = chartInstance.controller.getDatasetMeta(i);
+				// 			var total = 0;
+				// 			Chart.helpers.each(meta.data.forEach(function (bar, index) {
+				// 				total += dataset.data[index].y;
+				// 				ctx.fillText(dataset.data[index].y, (height + 30), ((bar._model.x * -1) + 4));
+				// 			}), this)
+				// 		}), this);
+				// 		ctx.restore();
+				// 	}
+				// }
 			}
 		});
 
@@ -288,6 +332,12 @@
 						},
 					}]
 				},
+				hover: {
+					onHover: function(e, el) {
+						$('#listenerHours').css("cursor", el[0] ? "pointer" : "default");
+					}
+				},
+				onClick: graphClickEvent,
 			}
 		});
 
