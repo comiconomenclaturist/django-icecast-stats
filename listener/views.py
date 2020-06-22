@@ -199,8 +199,8 @@ class CountViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 		return Response(response)
 
 
-class HoursViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
-	def get_queryset(self):
+class HoursViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+	def totals(self):
 		qs = Listener.objects.none()
 
 		for date_range in self.date_ranges:
@@ -227,5 +227,15 @@ class HoursViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 
 		return qs.order_by('period', self.stream_order,)
 
-	serializer_class = HoursSerializer
+	def list(self, request, *args, **kwargs):
+		response = {
+			'results': HoursSerializer(self.totals(), many=True).data
+		}
+		response.update({
+			'period': {
+				'start': self.period.lower,
+				'end': self.period.upper,
+				},
+				})
+		return Response(response)
 
