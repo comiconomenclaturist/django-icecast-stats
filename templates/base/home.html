@@ -185,6 +185,37 @@
 		}
 	}
 
+	var TimeCenterScale = Chart.scaleService.getScaleConstructor('time').extend({
+		getPixelForTick: function(index) {
+			var ticks = this.getTicks();
+			if (index < 0 || index >= ticks.length) {
+				return null;
+			}
+			// Get the pixel value for the current tick.
+			var px = this.getPixelForOffset(ticks[index].value);
+
+			// Get the next tick's pixel value.
+			var nextPx = this.right;
+			var nextTick = ticks[index + 1];
+			if (nextTick) {
+				nextPx = this.getPixelForOffset(nextTick.value);
+			} else {
+				var previousPx = this.left;
+				var previousTick = ticks[index - 1];
+				if (previousTick) {
+					previousPx = this.getPixelForOffset(previousTick.value);
+					return previousPx + (px - previousPx) / 2;
+				}
+			}
+
+			// Align the labels in the middle of the current and next tick.
+			return px - (nextPx - px) / 2;
+		},
+	});
+	
+	var defaults = Chart.scaleService.getScaleDefaults('time');
+	Chart.scaleService.registerScaleType('timecenter', TimeCenterScale, defaults);
+
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
 	var listenerCountChart = new Chart(listenerCountId, {
 		type: 'bar',
@@ -204,10 +235,11 @@
 					callbacks: {
 						title: function(tooltipItem, data) {
 							times = new Set(data.datasets[0].data.map(function(e) { return e.x.toLocaleTimeString() }));
-							if (times.size > 1) {
-								return tooltipItem[0].xLabel;
+							times = Array.from(times);
+							if (times.length == 1 && times[0] == '00:00:00') {
+								return tooltipItem[0].xLabel.split('–')[0];;
 							} else {
-								return tooltipItem[0].xLabel.split('–')[0];
+								return tooltipItem[0].xLabel;
 							}
 						},
 						afterLabel: function(tooltipItem, data) {
@@ -223,13 +255,19 @@
 				},
 				scales: {
 					xAxes: [{
-						type: 'time',
+						type: 'timecenter',
+						distribution: 'series',
 						time: {
 							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
 						},
 						stacked: true,
 						ticks: {
 							fontSize: 10,
+							source: 'data',
+							padding: 5,
+							autoSkip: true,
+							autoSkipPadding: 25,
+							maxRotation: 0,
 						},
 						offset: true,
 					}],
@@ -238,6 +276,7 @@
 						ticks: {
 							fontSize: 10,
 							beginAtZero: true,
+							padding: 5,
 							userCallback: function(label, index, labels) {
 								if (Math.floor(label) === label) {
 									return label;
@@ -295,10 +334,11 @@
 					callbacks: {
 						title: function(tooltipItem, data) {
 							times = new Set(data.datasets[0].data.map(function(e) { return e.x.toLocaleTimeString() }));
-							if (times.size > 1) {
-								return tooltipItem[0].xLabel;
+							times = Array.from(times);
+							if (times.length == 1 && times[0] == '00:00:00') {
+								return tooltipItem[0].xLabel.split('–')[0];;
 							} else {
-								return tooltipItem[0].xLabel.split('–')[0];
+								return tooltipItem[0].xLabel;
 							}
 						},
 						afterLabel : function(tooltipItem, data) {
@@ -314,13 +354,19 @@
 				},
 				scales: {
 					xAxes: [{
-						type: 'time',
+						type: 'timecenter',
+						distribution: 'series',
 						time: {
 							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
 						},
 						stacked: true,
 						ticks: {
 							fontSize: 10,
+							source: 'data',
+							padding: 5,
+							autoSkip: true,
+							autoSkipPadding: 25,
+							maxRotation: 0,
 						},
 						offset: true,
 					}],
@@ -329,6 +375,7 @@
 						ticks: {
 							fontSize: 10,
 							beginAtZero: true,
+							padding: 5,
 						},
 					}]
 				},
@@ -562,6 +609,14 @@
 			})
 
 			listenerCountChart.data.datasets = countDatasets;
+			var interval = (new Date(json.period['end']) - new Date(json.period['start'])) / 1000;
+			if (interval <= 43200) {
+				listenerCountChart.options.scales.xAxes[0].time.unit = 'minute';
+			} else if (interval <= 86400) {
+				listenerCountChart.options.scales.xAxes[0].time.unit = 'hour';
+			} else {
+				listenerCountChart.options.scales.xAxes[0].time.unit = 'day';
+			}
 			listenerCountChart.update();
 			countTotals = json.totals;
 			updateTitle(listenerCountChart);
@@ -646,6 +701,14 @@
 			})
 
 			listenerHoursChart.data.datasets = hoursDatasets;
+			var interval = (new Date(json.period['end']) - new Date(json.period['start'])) / 1000;
+			if (interval <= 43200) {
+				listenerHoursChart.options.scales.xAxes[0].time.unit = 'minute';
+			} else if (interval <= 86400) {
+				listenerHoursChart.options.scales.xAxes[0].time.unit = 'hour';
+			} else {
+				listenerHoursChart.options.scales.xAxes[0].time.unit = 'day';
+			}
 			listenerHoursChart.update();
 			updateTitle(listenerHoursChart);
 			$(listenerHoursChart.canvas).parent().siblings().fadeOut('fast');
@@ -705,6 +768,11 @@
 	$('#id_station, #id_region').change(function() {
 		getData();
 	});
+
+	// window.onpopstate = function(event){
+	// 	var params = event.target.location.search.substr(1);
+	// 	getData(params);
+	// }
 
 </script>
 
