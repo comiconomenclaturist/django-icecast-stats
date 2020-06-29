@@ -62,7 +62,7 @@ class Listener(models.Model):
 
 	class Meta:
 		unique_together = ('ip_address', 'stream', 'session', 'user_agent')
-		ordering = ('session',)
+		ordering = ('-session',)
 		indexes = [
 			GistIndex(fields=['session',]),
 		]
