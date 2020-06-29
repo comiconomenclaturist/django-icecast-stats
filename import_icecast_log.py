@@ -152,7 +152,7 @@ try:
 		Listener.objects.bulk_create(listeners)
 
 		year, month, day = re.match('access.log-(\d{4})(\d{2})(\d{2})\d{2}.gz', filename).groups()
-		s3_path = os.path.join(year, month, day, filepath)
+		s3_path = os.path.join(year, month, day, filename)
 		
 		s3 = boto3.client(
 			's3',
