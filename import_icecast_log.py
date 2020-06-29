@@ -161,10 +161,10 @@ try:
 			)
 
 		if not settings.DEBUG:
-			upload = s3.put_object(
-				Bucket=settings.AWS_STATS_BUCKET,
-				Key=s3_path,
-				Body=filepath
+			upload = s3.upload_file(
+				filepath,
+				settings.AWS_STATS_BUCKET,
+				s3_path,
 				)
 
 
