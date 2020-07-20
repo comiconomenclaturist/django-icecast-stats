@@ -49,18 +49,25 @@ class HoursSerializer(serializers.ModelSerializer):
 
 
 class CountriesSerializer(serializers.ModelSerializer):
-	country = CountryField(country_dict=True)
-	country__name = serializers.ReadOnlyField()
+	country = CountryField()
+	name = serializers.SerializerMethodField('get_name')
+	flag = serializers.SerializerMethodField('get_flag')
 	count = serializers.IntegerField(read_only=True)
+
+	def get_name(self, obj):
+		return Country.country.country(obj['country']).name
+
+	def get_flag(self, obj):
+		return Country.country.country(obj['country']).flag
 
 	class Meta:
 		model = Listener
-		fields = ('country', 'country__name', 'count',)
+		fields = ('country', 'name', 'flag', 'count',)
 
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
 		if not data['country']:
-			data['country'] = {'name': 'Unknown', 'code': ''}
+			data['country'] = {'name': 'Unknown', 'flag': None}
 		return data
 
 

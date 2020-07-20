@@ -25,6 +25,7 @@ DOM_CHOICES = (
 class ListenerForm(forms.Form):
 	station 	= forms.ModelChoiceField(queryset=Station.objects.all(), required=False)
 	region 		= forms.ModelChoiceField(queryset=Region.objects.all(), required=False)
+	referrer	= forms.ChoiceField(required=False)
 	datepicker	= forms.CharField(label='Period', widget=forms.TextInput(attrs={'size': 28},), required=False)
 	period		= DateTimeRangeField(widget=forms.widgets.SplitHiddenDateTimeWidget())
 	dom 		= forms.ChoiceField(label='Occurrence', choices=DOM_CHOICES, required=False)
@@ -32,3 +33,8 @@ class ListenerForm(forms.Form):
 	# timepicker	= forms.CharField(label='', widget=forms.TextInput(attrs={'size': 28},), required=False)
 	# slot		= DateTimeRangeField(widget=forms.widgets.SplitHiddenDateTimeWidget())
 	slot		= forms.CharField(widget=forms.TextInput(attrs={'size': 28},), required=False)
+
+	def clean(self):
+		if 'referrer' in self._errors:
+			del self._errors['referrer']
+		return self.cleaned_data

@@ -80,7 +80,7 @@ streams = Stream.objects.all()
 params = IngestParameters.objects.all().first()
 
 try:
-	for root, dirs, files in sorted(os.walk('./icecast-logs/2015')):
+	for root, dirs, files in sorted(os.walk('./icecast-logs/2020')):
 		listeners = []
 		files.sort()
 

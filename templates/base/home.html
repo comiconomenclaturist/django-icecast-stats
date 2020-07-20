@@ -7,7 +7,7 @@
 
 <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
 <script src="{% static 'js/moment.js' %}"></script>
-<script src="{% static 'js/chart.js@2.8.0' %}"></script>
+<script src="{% static 'js/chart.js' %}"></script>
 <script src="{% static 'libs/daterangepicker/daterangepicker.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'libs/daterangepicker/daterangepicker.css' %}">
 
@@ -31,7 +31,7 @@
 							{% endif %}
 						</div>
 					</div>
-					{% if forloop.counter == 3 %}
+					{% if forloop.counter == 4 %}
 						</div><div>
 					{% endif %}
 				{% endfor %}
@@ -478,7 +478,7 @@
 			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
 			var labels = [];
 			$.each(json.results.slice(0, colours.length), function(i, result) {
-				label = result.country.code.toUpperCase().replace(
+				label = result.country.toUpperCase().replace(
 					/./g, char => String.fromCodePoint(char.charCodeAt(0)+127397)
 					);
 				labels.push(label);
@@ -489,9 +489,9 @@
 			countriesChart.data.total = json['total'];
 			var title = countriesChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['distinct']);
 			countriesChart.options.title.text = title;
-			countriesChart.data.countries = json.results.map(function(e) { return e.country.name });
+			countriesChart.data.countries = json.results.map(function(e) { return e.name });
 			countriesChart.update();
-			$(countriesChart.canvas).parent().siblings().fadeOut('fast')
+			$(countriesChart.canvas).parent().siblings().fadeOut('fast');
 		});
 	}
 
@@ -507,6 +507,19 @@
 			refererChart.options.title.text = title;
 			refererChart.update();
 			$(refererChart.canvas).parent().siblings().fadeOut('fast')
+			var domains = json.results.map(function(e) { return e.domain; } );
+			var queryString = window.location.search;
+			var urlParams = new URLSearchParams(queryString);
+			var referrer = urlParams.get('referrer');
+			$('#id_referrer').empty();
+			$('#id_referrer').append('<option value="">---------</option>');
+			$.each(domains.sort(), function(index, domain) {
+				if (domain == referrer) {
+					$('#id_referrer').append('<option value='+referrer+' selected>'+referrer+'</option>');
+				} else {
+					$('#id_referrer').append('<option value='+domain+'>'+domain+'</option>');
+				}
+            });
 		});
 	}
 
@@ -702,7 +715,7 @@
 	$('input[name="slot"]').on('apply.daterangepicker', function() {
 		getData();
 	});
-	$('#id_station, #id_region').change(function() {
+	$('#id_station, #id_region, #id_referrer').change(function() {
 		getData();
 	});
 
