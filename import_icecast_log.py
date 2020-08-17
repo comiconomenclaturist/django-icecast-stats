@@ -16,8 +16,8 @@ from django.conf import settings
 from psycopg2.extras import DateTimeTZRange
 from datetime import datetime, timedelta
 from dateutil.parser import parse
-from urllib.parse import unquote
-from listener.models import Listener, Stream, IngestParameters
+from urllib.parse import unquote, urlparse
+from listener.models import Listener, Stream, IngestParameters, Referer
 from useragent.utils import get_user_agent, get_location
 
 
@@ -102,6 +102,13 @@ try:
 					# Then we split by trailing digits (duration), if present.
 					remaining = re.split('" "', line[match.end():])
 					referer = remaining[0].strip('"')
+
+					if referer != '-':
+						referer = urlparse(referer)
+						referer = Referer.objects.get_or_create(protocol=referer.scheme, domain=referer.netloc, path=referer.path, query=referer.query)[0]
+					else:
+						referer = None
+
 					if len(remaining) > 1:
 						user_agent = re.split('" \d+$', remaining[1])[0]
 						duration = re.findall('.* (\d+)$', remaining[1])
@@ -131,7 +138,8 @@ try:
 							listener = Listener(
 								ip_address 		= m['ip_addr'],
 								stream 			= stream,
-								referer			= unquote(referer.replace('-', ''))[:255],
+								# referer			= unquote(referer.replace('-', ''))[:255],
+								referer 		= referer,
 								session 		= session,
 								duration		= duration,
 								user_agent 		= user_agent,

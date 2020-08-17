@@ -499,7 +499,7 @@
 		$(refererChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/listener/referer/', data, function(json) {
 			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
-			var labels = json.results.slice(0, colours.length).map(function(e) { return e.domain });
+			var labels = json.results.slice(0, colours.length).map(function(e) { return e.referer__domain });
 			refererChart.data.datasets[0].data = data;
 			refererChart.data.labels = labels;
 			refererChart.data.total = json['total'];
@@ -507,7 +507,7 @@
 			refererChart.options.title.text = title;
 			refererChart.update();
 			$(refererChart.canvas).parent().siblings().fadeOut('fast')
-			var domains = json.results.map(function(e) { return e.domain; } );
+			var domains = json.results.map(function(e) { return e.referer__domain; } );
 			var queryString = window.location.search;
 			var urlParams = new URLSearchParams(queryString);
 			var referrer = urlParams.get('referrer');

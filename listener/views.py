@@ -40,12 +40,15 @@ class GetParamsMixin(object):
 				countries = form.cleaned_data['region'].countries.values('country')
 				self.listeners = self.listeners.filter(country__in=countries)
 
-			if self.request.GET.getlist('referrer'):
-				q = Q()
-				for referrer in self.request.GET.getlist('referrer'):
-					q = q | Q(referer__contains=referrer)
-
-				self.listeners = self.listeners.filter(q)
+			if self.request.GET.get('referrer'):
+				# self.listeners = self.listeners.annotate(
+				# 	domain = Func(
+				# 		F('referer'),
+				# 		Value('https?://(?:www\.)?(.+?)(?:\:\d+)?(?:\/.*)?'),
+				# 		Value('\\1'),
+				# 		function = 'regexp_replace',)
+				# 	).filter(domain=self.request.GET.get('referrer'))
+				self.listeners = self.listeners.filter(referer__domain=self.request.GET.get('referrer'))
 
 		return form
 
@@ -142,15 +145,18 @@ class CountriesViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
 		qs = super(RefererViewSet, self).get_queryset()
-		self.direct = qs.filter(referer='').count()
+		# self.direct = qs.filter(referer='').count()
+		self.direct = qs.filter(referer__isnull=True).count()
 
-		qs = qs.exclude(referer='').annotate(
-			domain = Func(
-				F('referer'),
-				Value('https?://(?:www\.)?(.+?)(?:\:\d+)?(?:\/.*)?'),
-				function = 'regexp_matches'),
-			)
-		qs = qs.order_by('domain').values('domain').annotate(count=Count('*')).order_by('-count')
+		# qs = qs.annotate(
+		# 	domain = Func(
+		# 		F('referer'),
+		# 		Value('https?://(?:www\.)?(.+?)(?:\:\d+)?(?:\/.*)?'),
+		# 		Value('\\1'),
+		# 		function = 'regexp_replace'),
+		# 	).exclude(referer='')
+		# qs = qs.order_by('domain').values('domain').annotate(count=Count('*')).order_by('-count')
+		qs = qs.filter(referer__isnull=False).order_by('referer__domain').values('referer__domain').annotate(count=Count('*')).order_by('-count')
 
 		return qs
 

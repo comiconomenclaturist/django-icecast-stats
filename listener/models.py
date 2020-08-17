@@ -48,12 +48,26 @@ class Stream(models.Model):
 		return '%s – %skbps' % (self.mountpoint, self.bitrate)
 
 
+class Referer(models.Model):
+	protocol = models.CharField(max_length=32)
+	domain = models.CharField(max_length=255)
+	path = models.CharField(max_length=255)
+	query = models.CharField(max_length=255)
+
+	class Meta:
+		ordering = ('domain', 'protocol', 'path',)
+
+	def __str__(self):
+		return self.domain
+
+
 class Listener(models.Model):
 	ip_address	= models.GenericIPAddressField(verbose_name='IP address')
 	stream		= models.ForeignKey(Stream, on_delete=models.PROTECT)
 	session		= DateTimeRangeField()
 	duration	= models.DurationField()
-	referer		= models.CharField(max_length=255)
+	# referer		= models.CharField(max_length=255)
+	referer		= models.ForeignKey(Referer, on_delete=models.SET_NULL, null=True)
 	user_agent	= models.ForeignKey(UserAgent, on_delete=models.SET_NULL, null=True)
 	country		= CountryField(null=True)
 	city		= models.CharField(max_length=255, null=True)

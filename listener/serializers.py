@@ -73,11 +73,11 @@ class CountriesSerializer(serializers.ModelSerializer):
 
 class RefererSerializer(serializers.ModelSerializer):
 	count = serializers.IntegerField(read_only=True)
-	domain = serializers.ReadOnlyField()
+	referer__domain = serializers.ReadOnlyField()
 
 	class Meta:
 		model = Listener
-		fields = ('domain', 'count',)
+		fields = ('referer__domain', 'count',)
 
 	# def to_representation(self, instance):
 	# 	data = super().to_representation(instance)

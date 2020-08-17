@@ -29,6 +29,3 @@ urlpatterns = [
     path('listener/', include('listener.urls')),
     path('useragent/', include('useragent.urls')),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
