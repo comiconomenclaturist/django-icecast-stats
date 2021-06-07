@@ -6,6 +6,7 @@ from listener.forms import ListenerForm
 from stats.secret import ICECAST_AUTH
 import xml.etree.ElementTree as ET
 import requests
+import os
 
 
 class Home(generic.FormView):
@@ -48,3 +49,11 @@ class LiveListeners(View):
 				live_listeners[stream.get().station.name] += listeners
 		
 		return JsonResponse(live_listeners)
+
+
+class Restart(View):
+	def post(self,request):
+		if request.is_ajax():
+			response = os.system('sudo /usr/bin/systemctl restart uwsgi.service')
+			return JsonResponse({'result': response})
+			

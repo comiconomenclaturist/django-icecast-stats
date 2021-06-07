@@ -166,6 +166,7 @@ form .cell .select {
 	display: grid;
 	grid-column-gap: 25px;
 	grid-template-columns: auto auto;
+	position: relative;
 }
 .info ul {
 	font-size: 12px;
@@ -174,8 +175,10 @@ form .cell .select {
 	padding: 0 5px 0 0;
 }
 #legend {
-	cursor: pointer;
 	float: left;
+}
+#legend li {
+	cursor: pointer;
 }
 #live {
 	margin-top: 5px;
@@ -189,7 +192,7 @@ form .cell .select {
 	text-decoration: line-through;
 }
 #legend li:before {
-	display:inline-block;
+	display: inline-block;
 	content: "\25A0";
 	font-size: 200%;
 	vertical-align: -2px;
@@ -219,6 +222,10 @@ a {
 }
 .upper {
 	text-transform: uppercase;
+}
+#restart {
+	position: absolute;
+	bottom: 0;
 }
 @media (max-width: 1200px) {
 	.container .cell {

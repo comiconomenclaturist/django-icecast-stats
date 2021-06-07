@@ -42,6 +42,7 @@
 	<div class="item">
 		<div class="info">
 			<div id="legend"></div>
+			<p id="restart" class="upper">Restart streams</p>
 			<div>
 				<div id="live"></div>
 				<p class="upper"><a href="/logout/?next=/">Log out</a></p>
@@ -707,6 +708,17 @@
 		getData();
 	});
 
+	$('#restart').on('click', function(e) {
+		if (confirm("Are you sure you want to restart the streams? This will kick all the listeners off and they will need to reconnect!")) {
+			$.ajax({
+				url: '/restart/',
+				method: 'POST',
+				data: {
+					csrfmiddlewaretoken: '{{ csrf_token }}'
+				},
+			});
+		}
+	});
 </script>
 
 {% endblock %}

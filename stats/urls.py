@@ -18,7 +18,8 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from base.views import Home, LiveListeners
+from base.views import Home, LiveListeners, Restart
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view()),
     path('', Home.as_view()),
     path('live/', LiveListeners.as_view()),
+    path('restart/', Restart.as_view()),
     path('listener/', include('listener.urls')),
     path('useragent/', include('useragent.urls')),
 ]
