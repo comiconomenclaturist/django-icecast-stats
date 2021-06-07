@@ -217,15 +217,16 @@ a {
 	color: lightgrey;
 	text-decoration: none;
 }
-.info a:hover {
-	text-decoration: underline;
-}
 .upper {
 	text-transform: uppercase;
 }
 #restart {
 	position: absolute;
 	bottom: 0;
+	cursor: pointer;
+}
+#legend li:hover, a:hover, #restart:hover {
+	color: #eee;
 }
 @media (max-width: 1200px) {
 	.container .cell {
