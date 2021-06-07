@@ -116,3 +116,5 @@ DATETIME_INPUT_FORMATS = [
     '%Y-%m-%d %H:%M:%S', 
     '%Y/%m/%d %H:%M:%S',
 ]
+
+DEFAULT_AUTO_FIELD='django.db.models.AutoField' 
