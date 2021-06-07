@@ -54,6 +54,5 @@ class LiveListeners(View):
 class Restart(View):
 	def post(self,request):
 		if request.is_ajax():
-			response = os.system('sudo /usr/bin/systemctl restart uwsgi.service')
+			response = os.system('sudo /usr/bin/systemctl restart icecast.service')
 			return JsonResponse({'result': response})
-			
