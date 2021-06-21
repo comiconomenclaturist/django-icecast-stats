@@ -22,6 +22,30 @@ DOM_CHOICES = (
 	)
 
 
+
+from psycopg2.extras import DateTimeRange
+from django.contrib.postgres.forms import BaseRangeField
+from django.contrib.postgres.fields.ranges import RangeField
+from django.db import models
+
+
+class TimeRangeFormField(BaseRangeField):
+    default_error_messages = {'invalid': 'Enter two valid times.'}
+    base_field = forms.TimeField
+    range_type = DateTimeRange
+
+
+class TimeRangeField(RangeField):
+    base_field = models.TimeField
+    range_type = DateTimeRange
+    form_field = TimeRangeFormField
+
+    def db_type(self, connection):
+        return 'tsrange'
+
+
+
+
 class ListenerForm(forms.Form):
 	station 	= forms.ModelChoiceField(queryset=Station.objects.all(), required=False)
 	region 		= forms.ModelChoiceField(queryset=Region.objects.all(), required=False)
@@ -31,8 +55,8 @@ class ListenerForm(forms.Form):
 	dom 		= forms.ChoiceField(label='Occurrence', choices=DOM_CHOICES, required=False)
 	dow			= forms.ChoiceField(label='Weekday', choices=DOW_CHOICES, required=False)
 	# timepicker	= forms.CharField(label='', widget=forms.TextInput(attrs={'size': 28},), required=False)
-	# slot		= DateTimeRangeField(widget=forms.widgets.SplitHiddenDateTimeWidget())
-	slot		= forms.CharField(widget=forms.TextInput(attrs={'size': 28},), required=False)
+	slot		= TimeRangeFormField()
+	# slot		= forms.CharField(widget=forms.TextInput(attrs={'size': 28},), required=False)
 
 	def clean(self):
 		if 'referrer' in self._errors:
