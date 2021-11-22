@@ -47,8 +47,6 @@ class GetParamsMixin(object):
 
 				self.listeners = self.listeners.filter(q)
 
-		else:
-			print(form.errors)
 		return form
 
 
@@ -60,11 +58,11 @@ class DateRangesMixin(GetParamsMixin):
 
 		if self.form.cleaned_data['dow'] and self.form.cleaned_data['slot']:
 			dow = int(self.form.cleaned_data['dow'])
-			slot = self.form.cleaned_data['slot']
+			lower, upper = [parser.parse(t).time() for t in self.form.cleaned_data['slot'].split(' - ')]
 
-			start 	= self.period.lower.replace(hour=slot.lower.hour, minute=slot.lower.minute, tzinfo=None)
-			end 	= self.period.upper.replace(hour=slot.upper.hour, minute=slot.upper.minute, tzinfo=None)
-			delta 	= end - self.period.upper.replace(hour=slot.lower.hour, minute=slot.lower.minute, tzinfo=None)
+			start 	= self.period.lower.replace(hour=lower.hour, minute=lower.minute, tzinfo=None)
+			end 	= self.period.upper.replace(hour=upper.hour, minute=upper.minute, tzinfo=None)
+			delta 	= end - self.period.upper.replace(hour=lower.hour, minute=lower.minute, tzinfo=None)
 
 			if self.form.cleaned_data['dom']:
 				dom = int(self.form.cleaned_data['dom'])

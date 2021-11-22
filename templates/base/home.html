@@ -113,17 +113,16 @@
 		$(datepicker.container).find('.minuteselect').hide();
 	});
 
-	$('[id^="id_slot"').daterangepicker({
-		singleDatePicker: true,
+	$('#id_slot').daterangepicker({
 		datePicker: false,
 		timePicker: true,
     	timePickerIncrement: 15,
     	timePicker24Hour: true,
     	locale: {
-			format: 'HH:mm'
+			format: 'hh:mm'
 		},
 	})
-	$('[id^="id_slot"').on('show.daterangepicker', function(e, datepicker) {
+	$('#id_slot').on('show.daterangepicker', function(e, datepicker) {
 		$(datepicker.container).find('.calendar-table').hide();
 	});
 
@@ -682,10 +681,10 @@
 	$(document).ready(function(){
 		$('#id_dow').change(function() {
 			if ($(this).val() == '') {
-				$('[id^="id_slot"').val('');
-				$('#id_dom, [id^="id_slot"').prop('disabled', true).closest('.cell').addClass('disabled');
+				$('#id_slot').val('');
+				$('#id_dom, #id_slot').prop('disabled', true).closest('.cell').addClass('disabled');
 			} else {
-				$('#id_dom, [id^="id_slot"').prop('disabled', false).closest('.cell').removeClass('disabled');
+				$('#id_dom, #id_slot').prop('disabled', false).closest('.cell').removeClass('disabled');
 			}
 		}).change();
 		$('#id_dom').change(function() {
@@ -702,7 +701,7 @@
 		$('#id_period_1').val(this.value.split(' - ')[1])
 		getData();
 	});
-	$('[id^="id_slot"').on('apply.daterangepicker', function() {
+	$('input[name="slot"]').on('apply.daterangepicker', function() {
 		getData();
 	});
 	$('#id_station, #id_region, #id_referrer').change(function() {
