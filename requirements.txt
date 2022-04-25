@@ -18,7 +18,7 @@ jmespath==0.9.4
 lazy-object-proxy==1.4.3
 maxminddb==1.4.1
 mccabe==0.6.1
-numpy==1.17.0
+numpy==1.21.0
 pandas==0.25.1
 pipdeptree==2.2.0
 psycopg2==2.9.2
