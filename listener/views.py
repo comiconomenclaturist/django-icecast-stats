@@ -6,7 +6,7 @@ from psycopg2.extras import DateTimeTZRange
 from rest_framework import viewsets
 from rest_framework.response import Response
 from datetime import datetime, timedelta
-from dateutil import relativedelta, parser
+from dateutil import relativedelta
 from dateutil.rrule import MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY
 from dateutil.rrule import rrule, rruleset, MO, TU, WE, TH, FR, SA, SU
 from .models import Listener
@@ -58,11 +58,18 @@ class DateRangesMixin(GetParamsMixin):
 
 		if self.form.cleaned_data['dow'] and self.form.cleaned_data['slot']:
 			dow = int(self.form.cleaned_data['dow'])
-			lower, upper = [parser.parse(t).time() for t in self.form.cleaned_data['slot'].split(' - ')]
+			slot = self.form.cleaned_data['slot']
 
-			start 	= self.period.lower.replace(hour=lower.hour, minute=lower.minute, tzinfo=None)
-			end 	= self.period.upper.replace(hour=upper.hour, minute=upper.minute, tzinfo=None)
-			delta 	= end - self.period.upper.replace(hour=lower.hour, minute=lower.minute, tzinfo=None)
+			start = self.period.lower.replace(hour=slot.start.hour, minute=slot.start.minute, tzinfo=None)
+
+			if slot.start > slot.stop:
+				end = self.period.upper.replace(tzinfo=None)
+				# Assuming that the slot end time is the following day
+				next_day = start + timedelta(days=1)
+				delta = next_day.replace(hour=slot.stop.hour, minute=slot.stop.minute) - start
+			else:
+				end = self.period.upper.replace(hour=slot.stop.hour, minute=slot.stop.minute, tzinfo=None)
+				delta = end - self.period.upper.replace(hour=slot.start.hour, minute=slot.start.minute, tzinfo=None)
 
 			if self.form.cleaned_data['dom']:
 				dom = int(self.form.cleaned_data['dom'])

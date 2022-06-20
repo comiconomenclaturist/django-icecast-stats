@@ -102,6 +102,9 @@ form select:not(:disabled):focus,
 form .cell .select {
 	position: relative;
 }
+form .cell #id_timepicker_0 {
+	float: left;
+}
 .select-icon {
 	position: absolute;
 	top: 10px;
@@ -130,6 +133,9 @@ form .cell .select {
 .calendar-table {
 	background-color: rgb(45,45,45) !important;
 	border-color: #222 !important;
+}
+.daterangepicker.ltr.single.opensright.show-calendar {
+	padding-right: 15px;
 }
 .daterangepicker .in-range {
 	background-color: orange !important;

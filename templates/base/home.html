@@ -113,16 +113,16 @@
 		$(datepicker.container).find('.minuteselect').hide();
 	});
 
-	$('#id_slot').daterangepicker({
-		datePicker: false,
-		timePicker: true,
+	$('input[name^="timepicker"]').daterangepicker({
+		singleDatePicker: true,
+    	timePicker: true,
     	timePickerIncrement: 15,
-    	timePicker24Hour: true,
+    	timePicker24Hour: false,
     	locale: {
-			format: 'hh:mm'
+			format: 'HH:mm'
 		},
 	})
-	$('#id_slot').on('show.daterangepicker', function(e, datepicker) {
+	$('input[name^="timepicker"]').on('show.daterangepicker', function(e, datepicker) {
 		$(datepicker.container).find('.calendar-table').hide();
 	});
 
@@ -665,7 +665,7 @@
 
 	function getData(params) {
 		if (!(params)) {
-			params = $("form *:not([name$=picker]").filter(function(index, element) {
+			params = $("form *:not([class=exclude]").filter(function(index, element) {
 				return $(element).val() != '';
 			}).serialize();
 		}
@@ -681,10 +681,10 @@
 	$(document).ready(function(){
 		$('#id_dow').change(function() {
 			if ($(this).val() == '') {
-				$('#id_slot').val('');
-				$('#id_dom, #id_slot').prop('disabled', true).closest('.cell').addClass('disabled');
+				$('input[name^="timepicker"').val('');
+				$('#id_dom, input[name^="timepicker"').prop('disabled', true).closest('.cell').addClass('disabled');
 			} else {
-				$('#id_dom, #id_slot').prop('disabled', false).closest('.cell').removeClass('disabled');
+				$('#id_dom, input[name^="timepicker"').prop('disabled', false).closest('.cell').removeClass('disabled');
 			}
 		}).change();
 		$('#id_dom').change(function() {
@@ -701,8 +701,14 @@
 		$('#id_period_1').val(this.value.split(' - ')[1])
 		getData();
 	});
-	$('input[name="slot"]').on('apply.daterangepicker', function() {
-		getData();
+	$('input[name^="timepicker"]').on('apply.daterangepicker', function() {
+		$('#'+this.id.replace('timepicker', 'slot')).val(this.value);
+		var nonEmptyItems = $('input[id^="id_slot_"]').filter(function() { 
+			return this.value != '';
+		})
+		if (nonEmptyItems.length == 2) {
+			getData();
+		}
 	});
 	$('#id_station, #id_region, #id_referrer').change(function() {
 		getData();
