@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class ListenersConfig(AppConfig):
+class ListenerConfig(AppConfig):
     name = 'listener'
