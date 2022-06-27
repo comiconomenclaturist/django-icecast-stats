@@ -121,7 +121,7 @@ class DateRangesMixin(GetParamsMixin):
 		return date_ranges
 
 
-class ListenerQuerySetMixin(DateRangesMixin):
+class ListenerReadOnlyModelViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
 		query = Q()
 		
@@ -131,7 +131,7 @@ class ListenerQuerySetMixin(DateRangesMixin):
 		return self.listeners.filter(query)
 
 
-class CountriesViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+class CountriesViewSet(ListenerReadOnlyModelViewSet):
 	def get_queryset(self):
 		qs = super(CountriesViewSet, self).get_queryset()
 		return qs.values(self.field).annotate(count=Count('*')).order_by('-count')
@@ -146,7 +146,7 @@ class CountriesViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 	serializer_class = CountriesSerializer
 
 
-class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+class RefererViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
 		qs = super(RefererViewSet, self).get_queryset()
 		self.direct = qs.filter(referer='').count()
@@ -171,7 +171,7 @@ class RefererViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 	serializer_class = RefererSerializer
 
 
-class CountViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+class CountViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
 	def totals(self):
 		queryset = Listener.objects.none()
 
@@ -212,13 +212,13 @@ class CountViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 		return Response(response)
 
 
-class HoursViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
+class HoursViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
 	def totals(self):
 		qs = Listener.objects.none()
 
 		for date_range in self.date_ranges:
 			qs = qs.union(
-				self.listeners.filter(
+				self.get_queryset().filter(
 					session__overlap = date_range,
 					)
 				.annotate(
@@ -238,7 +238,9 @@ class HoursViewSet(ListenerQuerySetMixin, viewsets.ReadOnlyModelViewSet):
 					)
 				)
 
-		return qs.order_by('period', self.stream_order,)
+		if qs.count():
+			return qs.order_by('period', self.stream_order,)
+		return qs
 
 	def list(self, request, *args, **kwargs):
 		response = {
