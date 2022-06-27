@@ -67,7 +67,8 @@ class CountriesSerializer(serializers.ModelSerializer):
 	def to_representation(self, instance):
 		data = super().to_representation(instance)
 		if not data['country']:
-			data['country'] = {'name': 'Unknown', 'flag': None}
+			data['country'] = ''
+			data['name'] = 'Unknown'
 		return data
 
 
