@@ -680,6 +680,15 @@
 		getReferers(params);
 	}
 
+	function timeSlotsPopulated() {
+		var nonEmptyItems = $('input[id^="id_slot_"]').filter(function() { 
+			return this.value != '';
+		})
+		if (nonEmptyItems.length == 2) {
+			return true;
+		}
+	}
+
 	$(document).ready(function(){
 		$('#id_dow').change(function() {
 			if ($(this).val() == '') {
@@ -689,10 +698,12 @@
 				getData();
 			} else {
 				$('#id_dom, input[name^="timepicker"').prop('disabled', false).closest('.cell').removeClass('disabled');
+				if (timeSlotsPopulated()) { getData();}
 			}
 		}).change();
 		$('#id_dom').change(function() {
 			$('#id_dow span').toggle($(this).val() > 0);
+			if (timeSlotsPopulated()) { getData();}
 		}).change();
 		var params = window.location.search.substr(1);
 		getData(params);
@@ -702,12 +713,7 @@
 
 	$('input[name^="timepicker"]').on('apply.daterangepicker', function() {
 		$('#'+this.id.replace('timepicker', 'slot')).val(this.value);
-		var nonEmptyItems = $('input[id^="id_slot_"]').filter(function() { 
-			return this.value != '';
-		})
-		if (nonEmptyItems.length == 2) {
-			getData();
-		}
+		if (timeSlotsPopulated()) { getData();}
 	});
 	$('#id_station, #id_region, #id_referrer').change(function() {
 		getData();

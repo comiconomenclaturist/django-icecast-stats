@@ -123,11 +123,14 @@ class DateRangesMixin(GetParamsMixin):
 
 class ListenerReadOnlyModelViewSet(DateRangesMixin, viewsets.ReadOnlyModelViewSet):
 	def get_queryset(self):
+		if not self.date_ranges:
+			return Listener.objects.none()
+
 		query = Q()
 		
 		for date_range in self.date_ranges:
 			query = query | Q(session__overlap=date_range)
-
+		
 		return self.listeners.filter(query)
 
 
@@ -146,7 +149,7 @@ class CountriesViewSet(ListenerReadOnlyModelViewSet):
 	serializer_class = CountriesSerializer
 
 
-class RefererViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
+class RefererViewSet(ListenerReadOnlyModelViewSet):
 	def get_queryset(self):
 		qs = super(RefererViewSet, self).get_queryset()
 		self.direct = qs.filter(referer='').count()
@@ -163,7 +166,7 @@ class RefererViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet
 
 	def list(self, request, *args, **kwargs):
 		response = super(RefererViewSet, self).list(request, args, kwargs)
-		response.data['total'] = self.get_queryset().aggregate(Sum('count')).get('count__sum')
+		response.data['total'] = self.get_queryset().aggregate(Sum('count')).get('count__sum') or 0
 		response.data['direct'] = self.direct
 		return response
 
@@ -171,7 +174,7 @@ class RefererViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet
 	serializer_class = RefererSerializer
 
 
-class CountViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
+class CountViewSet(ListenerReadOnlyModelViewSet):
 	def totals(self):
 		queryset = Listener.objects.none()
 
@@ -212,7 +215,7 @@ class CountViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
 		return Response(response)
 
 
-class HoursViewSet(ListenerReadOnlyModelViewSet, viewsets.ReadOnlyModelViewSet):
+class HoursViewSet(ListenerReadOnlyModelViewSet):
 	def totals(self):
 		qs = Listener.objects.none()
 
