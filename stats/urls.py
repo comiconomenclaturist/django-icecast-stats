@@ -30,6 +30,7 @@ urlpatterns = [
     path("restart/", Restart.as_view()),
     path("listener/", include("listener.urls")),
     path("useragent/", include("useragent.urls")),
+    path("source/", include("source.urls")),
 ]
 
 if settings.DEBUG:

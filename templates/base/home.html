@@ -19,22 +19,23 @@
 	<div class="item">
 		<form method="GET" action="/">
 			{% for field in form.hidden_fields %}
-				{{ field }}
+			{{ field }}
 			{% endfor %}
 			<div>
 				{% for field in form.visible_fields %}
-					<div class="cell">
-						<label>{{ field.label }}</label>
-						<div class="{{ field.field.widget.input_type }}">
-							{{ field }}
-							{% if field.field.widget.input_type == "select" %}
-								<span class="select-icon">&#9660;</span>
-							{% endif %}
-						</div>
+				<div class="cell">
+					<label>{{ field.label }}</label>
+					<div class="{{ field.field.widget.input_type }}">
+						{{ field }}
+						{% if field.field.widget.input_type == "select" %}
+						<span class="select-icon">&#9660;</span>
+						{% endif %}
 					</div>
-					{% if forloop.counter == 4 %}
-						</div><div>
-					{% endif %}
+				</div>
+				{% if forloop.counter == 4 %}
+			</div>
+			<div>
+				{% endif %}
 				{% endfor %}
 			</div>
 		</form>
@@ -54,23 +55,39 @@
 <div class="container">
 	<div class="cell">
 		<div class="canvas"><canvas id="listenerCount"></canvas></div>
-		<div class="overlay"><div class="loader"></div></div>
+		<div class="overlay">
+			<div class="loader"></div>
+		</div>
 	</div>
 	<div class="cell">
 		<div class="canvas"><canvas id="listenerHours"></canvas></div>
-		<div class="overlay"><div class="loader"></div></div>
+		<div class="overlay">
+			<div class="loader"></div>
+		</div>
 	</div>
 	<div class="cell">
 		<div class="canvas"><canvas id="browser"></canvas></div>
-		<div class="overlay"><div class="loader"></div></div>
+		<div class="overlay">
+			<div class="loader"></div>
+		</div>
 	</div>
 	<div class="cell">
 		<div class="canvas"><canvas id="countries"></canvas></div>
-		<div class="overlay"><div class="loader"></div></div>
+		<div class="overlay">
+			<div class="loader"></div>
+		</div>
 	</div>
 	<div class="cell">
 		<div class="canvas"><canvas id="referer"></canvas></div>
-		<div class="overlay"><div class="loader"></div></div>
+		<div class="overlay">
+			<div class="loader"></div>
+		</div>
+	</div>
+	<div class="cell">
+		<div class="canvas"><canvas id="disconnections"></canvas></div>
+		<div class="overlay">
+			<div class="loader"></div>
+		</div>
 	</div>
 </div>
 
@@ -106,25 +123,25 @@
 		endDate: period.split(' - ')[1],
 		minDate: '{{min_date}}',
 		maxDate: '{{max_date}}',
-	}, function(start, end, label) {
+	}, function (start, end, label) {
 		$('#id_period_0').val(start.format());
 		$('#id_period_1').val(end.format());
 		getData();
 	});
-	$('#id_datepicker').on('show.daterangepicker', function(e, datepicker) {
+	$('#id_datepicker').on('show.daterangepicker', function (e, datepicker) {
 		$(datepicker.container).find('.minuteselect').hide();
 	});
 
 	$('input[name^="timepicker"]').daterangepicker({
 		singleDatePicker: true,
-    	timePicker: true,
-    	timePickerIncrement: 15,
-    	timePicker24Hour: false,
-    	locale: {
+		timePicker: true,
+		timePickerIncrement: 15,
+		timePicker24Hour: false,
+		locale: {
 			format: 'HH:mm'
 		},
 	})
-	$('input[name^="timepicker"]').on('show.daterangepicker', function(e, datepicker) {
+	$('input[name^="timepicker"]').on('show.daterangepicker', function (e, datepicker) {
 		$(datepicker.container).find('.calendar-table').hide();
 	});
 
@@ -145,7 +162,7 @@
 		var parent = target.parentElement;
 		var index = Array.prototype.slice.call(parent.children).indexOf(target);
 
-		$.each([listenerCountChart, listenerHoursChart], function(i, chart) {
+		$.each([listenerCountChart, listenerHoursChart], function (i, chart) {
 			var meta = chart.getDatasetMeta(index);
 			if (meta.hidden === null) {
 				meta.hidden = !chart.data.datasets[index].hidden;
@@ -163,12 +180,12 @@
 		if (array[0]) {
 			var index = array[0]._index;
 			var start = new Date(array[0]._xScale._timestamps.data[index]);
-			if (index == (array[0]._xScale._timestamps.data.length -1)) {
+			if (index == (array[0]._xScale._timestamps.data.length - 1)) {
 				var end = $('#id_datepicker').data('daterangepicker').endDate._d
 			} else {
-				var end = new Date(array[0]._xScale._timestamps.data[index+1]);
+				var end = new Date(array[0]._xScale._timestamps.data[index + 1]);
 			}
-			if (end - start > 900000 ) { // 15 minutes minimum interval
+			if (end - start > 900000) { // 15 minutes minimum interval
 				$('#id_datepicker').data('daterangepicker').setStartDate(start);
 				$('#id_datepicker').data('daterangepicker').setEndDate(end);
 				$('.applyBtn')[0].click();
@@ -179,158 +196,158 @@
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
 	var listenerCountChart = new Chart(listenerCountId, {
 		type: 'bar',
-			data: {
-				datasets: [],
+		data: {
+			datasets: [],
+		},
+		options: {
+			title: {
+				text: 'Listener count',
 			},
-			options: {
-				title: {
-					text: 'Listener count',
-				},
-				legend: {
-					display: false,
-					onClick: newLegendClickHandler, // for title totals
-				},
-				tooltips: {
-					mode: 'x',
-					callbacks: {
-						title: function(tooltipItem, data) {
-							times = new Set(data.datasets[0].data.map(function(e) { return e.x.toLocaleTimeString() }));
-							if (times.size > 1) {
-								return tooltipItem[0].xLabel;
-							} else {
-								return tooltipItem[0].xLabel.split('–')[0];
-							}
-						},
-						afterLabel: function(tooltipItem, data) {
-							window.total = 0;
-							for(i=0; i < data.datasets.length; i++) {
-								window.total += parseFloat(data.datasets[i].data[tooltipItem.index].y)
-							}
-						},
-						footer: function() {
-							return 'Total: ' + window.total;
+			legend: {
+				display: false,
+				onClick: newLegendClickHandler, // for title totals
+			},
+			tooltips: {
+				mode: 'x',
+				callbacks: {
+					title: function (tooltipItem, data) {
+						times = new Set(data.datasets[0].data.map(function (e) { return e.x.toLocaleTimeString() }));
+						if (times.size > 1) {
+							return tooltipItem[0].xLabel;
+						} else {
+							return tooltipItem[0].xLabel.split('–')[0];
 						}
 					},
-				},
-				scales: {
-					xAxes: [{
-						type: 'time',
-						time: {
-							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
-						},
-						stacked: true,
-						ticks: {
-							fontSize: 10,
-						},
-						offset: true,
-					}],
-					yAxes: [{
-						stacked: true,
-						ticks: {
-							fontSize: 10,
-							beginAtZero: true,
-							userCallback: function(label, index, labels) {
-								if (Math.floor(label) === label) {
-									return label;
-								}
-							},
-						},
-					}]
-				},
-				hover: {
-					onHover: function(e, el) {
-						$('#listenerCount').css("cursor", el[0] ? "pointer" : "default");
+					afterLabel: function (tooltipItem, data) {
+						window.total = 0;
+						for (i = 0; i < data.datasets.length; i++) {
+							window.total += parseFloat(data.datasets[i].data[tooltipItem.index].y)
+						}
+					},
+					footer: function () {
+						return 'Total: ' + window.total;
 					}
 				},
-				onClick: graphClickEvent,
-				// animation: {
-				// 	onComplete: function(tooltipItem, data) {
-				// 		var chartInstance = this.chart;
-				// 		var ctx = chartInstance.ctx;
-				// 		var height = chartInstance.controller.boxes[0].maxHeight;
-				// 		ctx.save();
-				// 		ctx.font = '10px Verdana';
-				// 		ctx.fillStyle = '#222';
-				// 		ctx.textAlign = 'right'; 
-				// 		ctx.rotate(90 * Math.PI / 180); // 90 degree rotation
-				// 		Chart.helpers.each(this.data.datasets.forEach(function (dataset, i) {
-				// 			var meta = chartInstance.controller.getDatasetMeta(i);
-				// 			var total = 0;
-				// 			Chart.helpers.each(meta.data.forEach(function (bar, index) {
-				// 				total += dataset.data[index].y;
-				// 				ctx.fillText(dataset.data[index].y, (height + 30), ((bar._model.x * -1) + 4));
-				// 			}), this)
-				// 		}), this);
-				// 		ctx.restore();
-				// 	}
-				// }
-			}
-		});
+			},
+			scales: {
+				xAxes: [{
+					type: 'time',
+					time: {
+						tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+					},
+					stacked: true,
+					ticks: {
+						fontSize: 10,
+					},
+					offset: true,
+				}],
+				yAxes: [{
+					stacked: true,
+					ticks: {
+						fontSize: 10,
+						beginAtZero: true,
+						userCallback: function (label, index, labels) {
+							if (Math.floor(label) === label) {
+								return label;
+							}
+						},
+					},
+				}]
+			},
+			hover: {
+				onHover: function (e, el) {
+					$('#listenerCount').css("cursor", el[0] ? "pointer" : "default");
+				}
+			},
+			onClick: graphClickEvent,
+			// animation: {
+			// 	onComplete: function(tooltipItem, data) {
+			// 		var chartInstance = this.chart;
+			// 		var ctx = chartInstance.ctx;
+			// 		var height = chartInstance.controller.boxes[0].maxHeight;
+			// 		ctx.save();
+			// 		ctx.font = '10px Verdana';
+			// 		ctx.fillStyle = '#222';
+			// 		ctx.textAlign = 'right'; 
+			// 		ctx.rotate(90 * Math.PI / 180); // 90 degree rotation
+			// 		Chart.helpers.each(this.data.datasets.forEach(function (dataset, i) {
+			// 			var meta = chartInstance.controller.getDatasetMeta(i);
+			// 			var total = 0;
+			// 			Chart.helpers.each(meta.data.forEach(function (bar, index) {
+			// 				total += dataset.data[index].y;
+			// 				ctx.fillText(dataset.data[index].y, (height + 30), ((bar._model.x * -1) + 4));
+			// 			}), this)
+			// 		}), this);
+			// 		ctx.restore();
+			// 	}
+			// }
+		}
+	});
 
 	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
 	var listenerHoursChart = new Chart(listenerHoursId, {
 		type: 'bar',
-			data: {
-				datasets: [],
+		data: {
+			datasets: [],
+		},
+		options: {
+			title: {
+				text: 'Listener hours',
 			},
-			options: {
-				title: {
-					text: 'Listener hours',
-				},
-				legend: {
-					display: false,
-					onClick: newLegendClickHandler,
-				},
-				tooltips: {
-					mode: 'x',
-					callbacks: {
-						title: function(tooltipItem, data) {
-							times = new Set(data.datasets[0].data.map(function(e) { return e.x.toLocaleTimeString() }));
-							if (times.size > 1) {
-								return tooltipItem[0].xLabel;
-							} else {
-								return tooltipItem[0].xLabel.split('–')[0];
-							}
-						},
-						afterLabel : function(tooltipItem, data) {
-							window.total = 0;
-							for(i=0; i < data.datasets.length; i++) {
-								window.total += parseFloat(data.datasets[i].data[tooltipItem.index].y)
-							}
-						},
-						footer: function() {
-							return 'Total: ' + window.total.toFixed(2);
+			legend: {
+				display: false,
+				onClick: newLegendClickHandler,
+			},
+			tooltips: {
+				mode: 'x',
+				callbacks: {
+					title: function (tooltipItem, data) {
+						times = new Set(data.datasets[0].data.map(function (e) { return e.x.toLocaleTimeString() }));
+						if (times.size > 1) {
+							return tooltipItem[0].xLabel;
+						} else {
+							return tooltipItem[0].xLabel.split('–')[0];
 						}
 					},
-				},
-				scales: {
-					xAxes: [{
-						type: 'time',
-						time: {
-							tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
-						},
-						stacked: true,
-						ticks: {
-							fontSize: 10,
-						},
-						offset: true,
-					}],
-					yAxes: [{
-						stacked: true,
-						ticks: {
-							fontSize: 10,
-							beginAtZero: true,
-						},
-					}]
-				},
-				hover: {
-					onHover: function(e, el) {
-						$('#listenerHours').css("cursor", el[0] ? "pointer" : "default");
+					afterLabel: function (tooltipItem, data) {
+						window.total = 0;
+						for (i = 0; i < data.datasets.length; i++) {
+							window.total += parseFloat(data.datasets[i].data[tooltipItem.index].y)
+						}
+					},
+					footer: function () {
+						return 'Total: ' + window.total.toFixed(2);
 					}
 				},
-				onClick: graphClickEvent,
-			}
-		});
+			},
+			scales: {
+				xAxes: [{
+					type: 'time',
+					time: {
+						tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+					},
+					stacked: true,
+					ticks: {
+						fontSize: 10,
+					},
+					offset: true,
+				}],
+				yAxes: [{
+					stacked: true,
+					ticks: {
+						fontSize: 10,
+						beginAtZero: true,
+					},
+				}]
+			},
+			hover: {
+				onHover: function (e, el) {
+					$('#listenerHours').css("cursor", el[0] ? "pointer" : "default");
+				}
+			},
+			onClick: graphClickEvent,
+		}
+	});
 
 	var browserId = document.getElementById('browser').getContext('2d');
 	var browserChart = new Chart(browserId, {
@@ -371,13 +388,13 @@
 			tooltips: {
 				mode: 'label',
 				callbacks: {
-					title: function(tooltipItem, data) {
+					title: function (tooltipItem, data) {
 						return data.countries[tooltipItem[0].index];
 					},
-					afterLabel : function(tooltipItem, data) {
+					afterLabel: function (tooltipItem, data) {
 						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
 					},
-					footer: function() {
+					footer: function () {
 						return window.percentage.toFixed(2) + '% of total';
 					}
 				},
@@ -386,7 +403,7 @@
 				xAxes: [{
 					ticks: {
 						beginAtZero: true,
-						userCallback: function(label, index, labels) {
+						userCallback: function (label, index, labels) {
 							if (Math.floor(label) === label) {
 								return label;
 							}
@@ -423,10 +440,10 @@
 			tooltips: {
 				mode: 'label',
 				callbacks: {
-					afterLabel : function(tooltipItem, data) {
+					afterLabel: function (tooltipItem, data) {
 						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
 					},
-					footer: function() {
+					footer: function () {
 						return window.percentage.toFixed(2) + '% of total referrals';
 					}
 				},
@@ -435,7 +452,7 @@
 				xAxes: [{
 					ticks: {
 						beginAtZero: true,
-						userCallback: function(label, index, labels) {
+						userCallback: function (label, index, labels) {
 							if (Math.floor(label) === label) {
 								return label;
 							}
@@ -451,11 +468,32 @@
 		}
 	});
 
+	var disconnectionsId = document.getElementById('disconnections').getContext('2d');
+	var disconnectionsChart = new Chart(disconnectionsId, {
+		type: 'line',
+		options: {
+			title: {
+				text: 'Source disconnections',
+			}
+		},
+		scales: {
+			x: {
+				type: 'time',
+			},
+			y: {
+				ticks: {
+					fontSize: 10,
+					beginAtZero: true,
+				},
+			}
+		}
+	})
+
 	function getBrowsers(data) {
 		$(browserChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/useragent/browsers/', data, function(json) {
-			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
-			var labels = json.results.slice(0, colours.length).map(function(e) { return e.family });
+		$.get('/useragent/browsers/', data, function (json) {
+			var data = json.results.slice(0, colours.length).map(function (e) { return e.count });
+			var labels = json.results.slice(0, colours.length).map(function (e) { return e.family });
 			browserChart.data.datasets[0].data = data;
 			browserChart.data.labels = labels;
 			browserChart.update();
@@ -465,13 +503,13 @@
 
 	function getCountries(data) {
 		$(countriesChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/listener/countries/', data, function(json) {
-			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
+		$.get('/listener/countries/', data, function (json) {
+			var data = json.results.slice(0, colours.length).map(function (e) { return e.count });
 			var labels = [];
-			$.each(json.results.slice(0, colours.length), function(i, result) {
+			$.each(json.results.slice(0, colours.length), function (i, result) {
 				label = result.country.toUpperCase().replace(
-					/./g, char => String.fromCodePoint(char.charCodeAt(0)+127397)
-					);
+					/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397)
+				);
 				labels.push(label);
 			});
 			// var labels = json.results.slice(0, colours.length).map(function(e) { return e.country.name });
@@ -480,7 +518,7 @@
 			countriesChart.data.total = json['total'];
 			var title = countriesChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['distinct']);
 			countriesChart.options.title.text = title;
-			countriesChart.data.countries = json.results.map(function(e) { return e.name });
+			countriesChart.data.countries = json.results.map(function (e) { return e.name });
 			countriesChart.update();
 			$(countriesChart.canvas).parent().siblings().fadeOut('fast');
 		});
@@ -488,9 +526,9 @@
 
 	function getReferers(data) {
 		$(refererChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/listener/referer/', data, function(json) {
-			var data = json.results.slice(0, colours.length).map(function(e) { return e.count });
-			var labels = json.results.slice(0, colours.length).map(function(e) { return e.domain });
+		$.get('/listener/referer/', data, function (json) {
+			var data = json.results.slice(0, colours.length).map(function (e) { return e.count });
+			var labels = json.results.slice(0, colours.length).map(function (e) { return e.domain });
 			refererChart.data.datasets[0].data = data;
 			refererChart.data.labels = labels;
 			refererChart.data.total = json['total'];
@@ -498,35 +536,43 @@
 			refererChart.options.title.text = title;
 			refererChart.update();
 			$(refererChart.canvas).parent().siblings().fadeOut('fast')
-			var domains = json.results.map(function(e) { return e.domain; } );
+			var domains = json.results.map(function (e) { return e.domain; });
 			var queryString = window.location.search;
 			var urlParams = new URLSearchParams(queryString);
 			var referrer = urlParams.get('referrer');
 			$('#id_referrer').empty();
 			$('#id_referrer').append('<option value="">---------</option>');
-			$.each(domains.sort(), function(index, domain) {
+			$.each(domains.sort(), function (index, domain) {
 				if (domain == referrer) {
-					$('#id_referrer').append('<option value='+referrer+' selected>'+referrer+'</option>');
+					$('#id_referrer').append('<option value=' + referrer + ' selected>' + referrer + '</option>');
 				} else {
-					$('#id_referrer').append('<option value='+domain+'>'+domain+'</option>');
+					$('#id_referrer').append('<option value=' + domain + '>' + domain + '</option>');
 				}
-            });
+			});
+		});
+	}
+
+	function getDisconnections(data) {
+		$(disconnectionsChart.canvas).parent().siblings().fadeIn('fast')
+		$.get('/source/disconnection/', data, function (json) {
+			console.log(json.results)
+			$(disconnectionsChart.canvas).parent().siblings().fadeOut('fast')
 		});
 	}
 
 	function updateTitle(chart) {
 		var total = 0;
 
-		$.each(chart.data.datasets, function(e, dataset) {
+		$.each(chart.data.datasets, function (e, dataset) {
 			if (chart.isDatasetVisible(e)) {
 				if (chart.canvas.id === 'listenerCount') {
-					total += countTotals.filter(function(e) {
+					total += countTotals.filter(function (e) {
 						return e.stream === dataset.label
 					})[0].count
 				} else {
-					total += parseFloat(dataset.data.map(function(e) {
+					total += parseFloat(dataset.data.map(function (e) {
 						return e.y
-					}).reduce(function(total, num) {
+					}).reduce(function (total, num) {
 						return parseFloat(total) + parseFloat(num);
 					}))
 				}
@@ -540,19 +586,19 @@
 
 	function getCount(data) {
 		$(listenerCountChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/listener/count/', data, function(json) {
+		$.get('/listener/count/', data, function (json) {
 			var countDatasets = [];
-			var streams = Array.from(new Set(json.results.map(function(e) { return e['stream'] })));
-			var periods = Array.from(new Set(json.results.map(function(e) { return e['period'] })));
+			var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
+			var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
 
-			$.each(streams, function(stream_index, stream) {
+			$.each(streams, function (stream_index, stream) {
 				var count_data = [];
-				$.each(periods, function(period_index, period) {
+				$.each(periods, function (period_index, period) {
 					count_data.push({
 						x: new Date(period),
-						y: json.results.filter(function(e) {
+						y: json.results.filter(function (e) {
 							return e.stream === stream && e.period === period
-						}).map(function(e) {
+						}).map(function (e) {
 							return e.count
 						})[0] || 0
 					})
@@ -586,15 +632,15 @@
 	}
 
 	function getCount2(data) {
-		$.get('/listener/count2/', data, function(json) {
+		$.get('/listener/count2/', data, function (json) {
 			var countDatasets = [];
-			var streams = json.totals.map(function(e) {return e.stream});
+			var streams = json.totals.map(function (e) { return e.stream });
 
-			$.each(streams, function(stream_index, stream) {
+			$.each(streams, function (stream_index, stream) {
 				var count_data = [];
 
-				$.each(json.results, function(result) {
-					$.each(json.results[result], function(i, e) {
+				$.each(json.results, function (result) {
+					$.each(json.results[result], function (i, e) {
 						if (e['stream'] === stream) {
 							count_data.push({
 								x: new Date(result),
@@ -616,7 +662,7 @@
 			listenerCountChart.update();
 
 			var start = moment(json.results[0].period).format('YYYY/MM/DD HH');
-			var end = moment(json.results[json.results.length-1].period).format('YYYY/MM/DD HH');
+			var end = moment(json.results[json.results.length - 1].period).format('YYYY/MM/DD HH');
 			$('#id_datepicker').data('daterangepicker').setStartDate(start);
 			$('#id_datepicker').data('daterangepicker').setEndDate(end);
 		});
@@ -624,19 +670,19 @@
 
 	function getHours(data) {
 		$(listenerHoursChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/listener/hours/', data, function(json) {
+		$.get('/listener/hours/', data, function (json) {
 			var hoursDatasets = [];
-			var streams = Array.from(new Set(json.results.map(function(e) { return e['stream'] })));
-			var periods = Array.from(new Set(json.results.map(function(e) { return e['period'] })));
+			var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
+			var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
 
-			$.each(streams, function(stream_index, stream) {
+			$.each(streams, function (stream_index, stream) {
 				var hours_data = [];
-				$.each(periods, function(period_index, period) {
+				$.each(periods, function (period_index, period) {
 					hours_data.push({
 						x: new Date(period),
-						y: json.results.filter(function(e) {
+						y: json.results.filter(function (e) {
 							return e.stream === stream && e.period === period
-						}).map(function(e) {
+						}).map(function (e) {
 							return e.hours.toFixed(2)
 						})[0] || 0
 					})
@@ -657,9 +703,9 @@
 	}
 
 	function getLiveListeners() {
-		$.get('/live/', function(json) {
+		$.get('/live/', function (json) {
 			$('#live').html('<ul></ul>');
-			$.each(json, function(station, listeners) {
+			$.each(json, function (station, listeners) {
 				$('#live').find('ul').append('<li>' + station + ': ' + listeners + '</li>');
 			})
 		});
@@ -667,7 +713,7 @@
 
 	function getData(params) {
 		if (!(params)) {
-			params = $("form *:not([class=exclude]").filter(function(index, element) {
+			params = $("form *:not([class=exclude]").filter(function (index, element) {
 				return $(element).val() != '';
 			}).serialize();
 		}
@@ -678,10 +724,11 @@
 		getBrowsers(params);
 		getCountries(params);
 		getReferers(params);
+		getDisconnections(params);
 	}
 
 	function timeSlotsPopulated() {
-		var nonEmptyItems = $('input[id^="id_slot_"]').filter(function() { 
+		var nonEmptyItems = $('input[id^="id_slot_"]').filter(function () {
 			return this.value != '';
 		})
 		if (nonEmptyItems.length == 2) {
@@ -689,8 +736,8 @@
 		}
 	}
 
-	$(document).ready(function(){
-		$('#id_dow').change(function() {
+	$(document).ready(function () {
+		$('#id_dow').change(function () {
 			if ($(this).val() == '') {
 				$('input[id^="id_timepicker"').val('');
 				$('input[id^="id_slot"').val('');
@@ -698,28 +745,28 @@
 				getData();
 			} else {
 				$('#id_dom, input[name^="timepicker"').prop('disabled', false).closest('.cell').removeClass('disabled');
-				if (timeSlotsPopulated()) { getData();}
+				if (timeSlotsPopulated()) { getData(); }
 			}
 		}).change();
-		$('#id_dom').change(function() {
+		$('#id_dom').change(function () {
 			$('#id_dow span').toggle($(this).val() > 0);
-			if (timeSlotsPopulated()) { getData();}
+			if (timeSlotsPopulated()) { getData(); }
 		}).change();
 		var params = window.location.search.substr(1);
 		getData(params);
 		getLiveListeners();
-		setInterval(function(){ getLiveListeners(); }, 30000);
+		setInterval(function () { getLiveListeners(); }, 30000);
 	});
 
-	$('input[name^="timepicker"]').on('apply.daterangepicker', function() {
-		$('#'+this.id.replace('timepicker', 'slot')).val(this.value);
-		if (timeSlotsPopulated()) { getData();}
+	$('input[name^="timepicker"]').on('apply.daterangepicker', function () {
+		$('#' + this.id.replace('timepicker', 'slot')).val(this.value);
+		if (timeSlotsPopulated()) { getData(); }
 	});
-	$('#id_station, #id_region, #id_referrer').change(function() {
+	$('#id_station, #id_region, #id_referrer').change(function () {
 		getData();
 	});
 
-	$('#restart').on('click', function(e) {
+	$('#restart').on('click', function (e) {
 		if (confirm("Are you sure you want to restart the streams? This will kick all the listeners off and they will need to reconnect!")) {
 			$.ajax({
 				url: '/restart/',
