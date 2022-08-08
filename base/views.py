@@ -10,49 +10,65 @@ import os
 
 
 class Home(generic.FormView):
-	def get(self, request, *args, **kwargs):
-		form = ListenerForm(request.GET)
-		
-		context = {
-			'form': form,
-			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %H:%M'),
-			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %H:%M'),
-			}
-		
-		return render(request, 'base/home.html', context)
+    def get(self, request, *args, **kwargs):
+        form = ListenerForm(request.GET)
+
+        context = {
+            "form": form,
+            "min_date": Listener.objects.order_by("session")
+            .first()
+            .session.lower.astimezone()
+            .strftime("%Y/%m/%d %H:%M"),
+            "max_date": Listener.objects.order_by("session")
+            .last()
+            .session.upper.astimezone()
+            .strftime("%Y/%m/%d %H:%M"),
+        }
+
+        return render(request, "base/home.html", context)
 
 
 class HomeD3(generic.FormView):
-	def get(self, request, *args, **kwargs):
-		form = ListenerForm()
-		context = {
-			'form': form,
-			'min_date': Listener.objects.order_by('session').first().session.lower.astimezone().strftime('%Y/%m/%d %H:%M'),
-			'max_date': Listener.objects.order_by('session').last().session.upper.astimezone().strftime('%Y/%m/%d %H:%M'),
-			}
-		return render(request, 'base/d3.html', context)
+    def get(self, request, *args, **kwargs):
+        form = ListenerForm()
+        context = {
+            "form": form,
+            "min_date": Listener.objects.order_by("session")
+            .first()
+            .session.lower.astimezone()
+            .strftime("%Y/%m/%d %H:%M"),
+            "max_date": Listener.objects.order_by("session")
+            .last()
+            .session.upper.astimezone()
+            .strftime("%Y/%m/%d %H:%M"),
+        }
+        return render(request, "base/d3.html", context)
 
 
 class LiveListeners(View):
-	def get(self, request, *args, **kwargs):
-		live_listeners = {station: 0 for station in Station.objects.values_list('name', flat=True)}
+    def get(self, request, *args, **kwargs):
+        live_listeners = {
+            station: 0 for station in Station.objects.values_list("name", flat=True)
+        }
 
-		url = f'{ICECAST_AUTH["protocol"]}://{ICECAST_AUTH["host"]}:{ICECAST_AUTH["port"]}/admin/listmounts'
-		r = requests.get(url, verify=True, auth=(ICECAST_AUTH['username'], ICECAST_AUTH['password']))
-		tree = ET.fromstring(r.text)
-		sources = tree.findall('source')
+        url = f'{ICECAST_AUTH["protocol"]}://{ICECAST_AUTH["host"]}:{ICECAST_AUTH["port"]}/admin/listmounts'
+        r = requests.get(
+            url, verify=True, auth=(ICECAST_AUTH["username"], ICECAST_AUTH["password"])
+        )
+        tree = ET.fromstring(r.text)
+        sources = tree.findall("source")
 
-		for source in sources:
-			stream = Stream.objects.filter(mountpoint = source.get('mount'))
-			listeners = int(source.find('listeners').text)
-			if stream and listeners:
-				live_listeners[stream.get().station.name] += listeners
-		
-		return JsonResponse(live_listeners)
+        for source in sources:
+            stream = Stream.objects.filter(mountpoint=source.get("mount"))
+            listeners = int(source.find("listeners").text)
+            if stream and listeners:
+                live_listeners[stream.get().station.name] += listeners
+
+        return JsonResponse(live_listeners)
 
 
 class Restart(View):
-	def post(self,request):
-		if request.is_ajax():
-			response = os.system('sudo /usr/bin/systemctl restart icecast.service')
-			return JsonResponse({'result': response})
+    def post(self, request):
+        if request.is_ajax():
+            response = os.system("sudo /usr/bin/systemctl restart icecast.service")
+            return JsonResponse({"result": response})

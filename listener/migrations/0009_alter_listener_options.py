@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listener', '0008_auto_20191209_1741'),
+        ("listener", "0008_auto_20191209_1741"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='listener',
-            options={'ordering': ('-session',)},
+            name="listener",
+            options={"ordering": ("-session",)},
         ),
     ]

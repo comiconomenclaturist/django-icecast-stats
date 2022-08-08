@@ -7,18 +7,22 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listener', '0007_auto_20191209_1734'),
+        ("listener", "0007_auto_20191209_1734"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='country',
-            old_name='name',
-            new_name='country',
+            model_name="country",
+            old_name="name",
+            new_name="country",
         ),
         migrations.AlterField(
-            model_name='country',
-            name='region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='countries', to='listener.Region'),
+            model_name="country",
+            name="region",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="countries",
+                to="listener.Region",
+            ),
         ),
     ]

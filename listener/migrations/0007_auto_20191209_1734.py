@@ -7,21 +7,21 @@ import django_countries.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listener', '0006_auto_20191209_1725'),
+        ("listener", "0006_auto_20191209_1725"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='country',
-            options={'verbose_name_plural': 'Countries'},
+            name="country",
+            options={"verbose_name_plural": "Countries"},
         ),
         migrations.RemoveField(
-            model_name='country',
-            name='code',
+            model_name="country",
+            name="code",
         ),
         migrations.AlterField(
-            model_name='country',
-            name='name',
+            model_name="country",
+            name="name",
             field=django_countries.fields.CountryField(max_length=2, null=True),
         ),
     ]

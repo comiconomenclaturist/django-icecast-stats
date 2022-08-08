@@ -6,9 +6,13 @@ from listener.views import ListenerReadOnlyModelViewSet
 
 
 class BrowsersViewSet(ListenerReadOnlyModelViewSet):
-	def get_queryset(self):
-		qs = super(BrowsersViewSet, self).get_queryset()
-		return qs.values('user_agent__browser__family').annotate(count=Count('*')).order_by('-count')
+    def get_queryset(self):
+        qs = super(BrowsersViewSet, self).get_queryset()
+        return (
+            qs.values("user_agent__browser__family")
+            .annotate(count=Count("*"))
+            .order_by("-count")
+        )
 
-	serializer_class = BrowserSerializer
-	permission_classes = [IsAuthenticated]
+    serializer_class = BrowserSerializer
+    permission_classes = [IsAuthenticated]

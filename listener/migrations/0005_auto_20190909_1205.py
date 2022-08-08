@@ -7,20 +7,30 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listener', '0004_auto_20190820_2141'),
+        ("listener", "0004_auto_20190820_2141"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Station',
+            name="Station",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=127, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=127, unique=True)),
             ],
         ),
         migrations.AlterField(
-            model_name='stream',
-            name='station',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='listener.Station'),
+            model_name="stream",
+            name="station",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="listener.Station"
+            ),
         ),
     ]

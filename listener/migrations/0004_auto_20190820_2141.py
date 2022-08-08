@@ -7,16 +7,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listener', '0003_auto_20190801_1601'),
+        ("listener", "0003_auto_20190801_1601"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='listeneraggregate',
-            options={'ordering': ['-period']},
+            name="listeneraggregate",
+            options={"ordering": ["-period"]},
         ),
         migrations.AddIndex(
-            model_name='listener',
-            index=django.contrib.postgres.indexes.GistIndex(fields=['session'], name='listener_li_session_d2c08d_gist'),
+            model_name="listener",
+            index=django.contrib.postgres.indexes.GistIndex(
+                fields=["session"], name="listener_li_session_d2c08d_gist"
+            ),
         ),
     ]

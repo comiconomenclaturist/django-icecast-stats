@@ -7,39 +7,57 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listener', '0005_auto_20190909_1205'),
+        ("listener", "0005_auto_20190909_1205"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Country',
+            name="Country",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=63)),
-                ('code', models.CharField(max_length=2)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=63)),
+                ("code", models.CharField(max_length=2)),
             ],
         ),
         migrations.CreateModel(
-            name='Region',
+            name="Region",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=127)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=127)),
             ],
         ),
         migrations.AlterModelOptions(
-            name='station',
-            options={'ordering': ('-name',)},
+            name="station",
+            options={"ordering": ("-name",)},
         ),
         migrations.AlterModelOptions(
-            name='stream',
-            options={'ordering': ('-station__name', '-bitrate', 'mountpoint')},
+            name="stream",
+            options={"ordering": ("-station__name", "-bitrate", "mountpoint")},
         ),
         migrations.DeleteModel(
-            name='ListenerAggregate',
+            name="ListenerAggregate",
         ),
         migrations.AddField(
-            model_name='country',
-            name='region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='listener.Region'),
+            model_name="country",
+            name="region",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="listener.Region"
+            ),
         ),
     ]

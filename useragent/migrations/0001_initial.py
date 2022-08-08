@@ -7,64 +7,119 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Browser',
+            name="Browser",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('family', models.CharField(max_length=255)),
-                ('version', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("family", models.CharField(max_length=255)),
+                ("version", models.CharField(max_length=255)),
             ],
             options={
-                'ordering': ('family', 'version'),
-                'unique_together': {('family', 'version')},
+                "ordering": ("family", "version"),
+                "unique_together": {("family", "version")},
             },
         ),
         migrations.CreateModel(
-            name='Device',
+            name="Device",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('family', models.CharField(max_length=255)),
-                ('brand', models.CharField(max_length=255, null=True)),
-                ('model', models.CharField(max_length=255, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("family", models.CharField(max_length=255)),
+                ("brand", models.CharField(max_length=255, null=True)),
+                ("model", models.CharField(max_length=255, null=True)),
             ],
             options={
-                'ordering': ('family', 'brand', 'model'),
-                'unique_together': {('family', 'brand', 'model')},
+                "ordering": ("family", "brand", "model"),
+                "unique_together": {("family", "brand", "model")},
             },
         ),
         migrations.CreateModel(
-            name='OS',
+            name="OS",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('family', models.CharField(max_length=255)),
-                ('version', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("family", models.CharField(max_length=255)),
+                ("version", models.CharField(max_length=255)),
             ],
             options={
-                'verbose_name': 'OS',
-                'verbose_name_plural': 'OSs',
-                'ordering': ('family', 'version'),
-                'unique_together': {('family', 'version')},
+                "verbose_name": "OS",
+                "verbose_name_plural": "OSs",
+                "ordering": ("family", "version"),
+                "unique_together": {("family", "version")},
             },
         ),
         migrations.CreateModel(
-            name='UserAgent',
+            name="UserAgent",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('string', models.CharField(max_length=255)),
-                ('is_mobile', models.BooleanField(default=False)),
-                ('is_tablet', models.BooleanField(default=False)),
-                ('is_bot', models.BooleanField(default=False)),
-                ('browser', models.ForeignKey(blank=True, null=True, on_delete=models.CASCADE, to='useragent.Browser')),
-                ('device', models.ForeignKey(blank=True, null=True, on_delete=models.CASCADE, to='useragent.Device')),
-                ('os', models.ForeignKey(blank=True, null=True, on_delete=models.CASCADE, to='useragent.OS')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("string", models.CharField(max_length=255)),
+                ("is_mobile", models.BooleanField(default=False)),
+                ("is_tablet", models.BooleanField(default=False)),
+                ("is_bot", models.BooleanField(default=False)),
+                (
+                    "browser",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=models.CASCADE,
+                        to="useragent.Browser",
+                    ),
+                ),
+                (
+                    "device",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=models.CASCADE,
+                        to="useragent.Device",
+                    ),
+                ),
+                (
+                    "os",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=models.CASCADE,
+                        to="useragent.OS",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'User Agent',
-                'unique_together': {('string', 'device', 'os', 'browser')},
+                "verbose_name": "User Agent",
+                "unique_together": {("string", "device", "os", "browser")},
             },
         ),
     ]

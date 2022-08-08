@@ -22,14 +22,14 @@ from base.views import Home, LiveListeners, Restart
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('login/', auth_views.LoginView.as_view()),
-    path('logout/', auth_views.LogoutView.as_view()),
-    path('', Home.as_view()),
-    path('live/', LiveListeners.as_view()),
-    path('restart/', Restart.as_view()),
-    path('listener/', include('listener.urls')),
-    path('useragent/', include('useragent.urls')),
+    path("admin/", admin.site.urls),
+    path("login/", auth_views.LoginView.as_view()),
+    path("logout/", auth_views.LogoutView.as_view()),
+    path("", Home.as_view()),
+    path("live/", LiveListeners.as_view()),
+    path("restart/", Restart.as_view()),
+    path("listener/", include("listener.urls")),
+    path("useragent/", include("useragent.urls")),
 ]
 
 if settings.DEBUG:
