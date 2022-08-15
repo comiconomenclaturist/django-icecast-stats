@@ -10,6 +10,8 @@
 <script src="{% static 'js/libs/chartjs/dist/chart.js' %}"></script>
 <script src="{% static 'js/libs/daterangepicker/daterangepicker.js' %}"></script>
 <script src="{% static 'js/global.js' %}"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'js/libs/daterangepicker/daterangepicker.css' %}">
 
 <div class="header">
@@ -233,7 +235,7 @@
 				x: {
 					type: 'time',
 					time: {
-						tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+						tooltipFormat: 'do MMM, yyyy – h:mma',
 					},
 					stacked: true,
 					ticks: {
@@ -324,7 +326,7 @@
 				x: {
 					type: 'time',
 					time: {
-						tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
+						tooltipFormat: 'do MMM, yyyy – h:mma',
 					},
 					stacked: true,
 					ticks: {
@@ -411,7 +413,7 @@
 						},
 					},
 				},
-				yAyxes: {
+				y: {
 					gridLines: {
 						display: false,
 					},
@@ -630,7 +632,7 @@
 			$('#id_datepicker').data('daterangepicker').setEndDate(end);
 
 			var legendContainer = document.getElementById("legend");
-			legendContainer.innerHTML = listenerCountChart.generateLegend();
+			// legendContainer.innerHTML = listenerCountChart.generateLegend();
 			var legendItems = legendContainer.getElementsByTagName('li');
 			for (var i = 0; i < legendItems.length; i += 1) {
 				legendItems[i].addEventListener("click", legendClickCallback, false);

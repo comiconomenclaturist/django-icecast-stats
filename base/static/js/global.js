@@ -1,7 +1,7 @@
 Chart.defaults.defaultFontColor = 'lightgrey';
 Chart.defaults.scale['gridLines'] = {
     'color': '#555',
-    'drawOnChartArea': false
+    'drawOnChartArea': true
 }
 Chart.defaults.plugins.legend.position = 'right';
 Chart.defaults.plugins.legend.labels.boxWidth = 10;
