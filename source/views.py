@@ -1,19 +1,29 @@
 from rest_framework import viewsets
-from .models import Disconnection
-from .serializers import DisconnectionSerializer
+from django.db.models import Prefetch
+from listener.models import Stream
 from listener.views import GetParamsMixin
+from .serializers import SourceSerializer
+from .models import Source
 
 
-class DisconnectionViewset(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
+class ConnectionViewset(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         if self.form.is_valid():
-            qs = Disconnection.objects.filter(
-                period__overlap=self.period,
+            sources = Source.objects.filter(
+                timestamp__range=[self.period.lower, self.period.upper]
             )
+
+            queryset = Stream.objects.filter(connections__in=sources).distinct()
+
             if self.form.cleaned_data["station"]:
-                qs = qs.filter(stream__station=self.form.cleaned_data["station"])
-            return qs
+                queryset = queryset.filter(station=self.form.cleaned_data["station"])
 
-        return Disconnection.objects.none()
+            queryset = queryset.prefetch_related(
+                Prefetch("connections", queryset=sources)
+            )
 
-    serializer_class = DisconnectionSerializer
+            return queryset
+
+        return Stream.objects.none()
+
+    serializer_class = SourceSerializer

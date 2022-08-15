@@ -1,13 +1,13 @@
 from django.contrib import admin
-from .models import Disconnection
+from .models import Source
 
 
-class DisconnectionAdmin(admin.ModelAdmin):
+class SourceAdmin(admin.ModelAdmin):
     list_display = (
         "stream",
-        "disconnected_at",
-        "connected_at",
+        "timestamp",
+        "connection",
     )
 
 
-admin.site.register(Disconnection, DisconnectionAdmin)
+admin.site.register(Source, SourceAdmin)

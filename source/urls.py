@@ -4,5 +4,5 @@ from .views import *
 app_name = "source"
 
 urlpatterns = [
-    path("disconnection/", DisconnectionViewset.as_view({"get": "list"})),
+    path("connections/", ConnectionViewset.as_view({"get": "list"})),
 ]

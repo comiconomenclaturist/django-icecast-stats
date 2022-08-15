@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
-from psycopg2.extras import DateTimeTZRange
 from datetime import datetime
-from source.models import Disconnection
+from source.models import Source
 from listener.models import Stream
 
 
@@ -13,24 +12,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         mountpoint = options["mountpoint"][0]
-
         streams = Stream.objects.filter(mountpoint=mountpoint)
 
         if streams:
             stream = streams.get()
 
-            disconnection = Disconnection.objects.filter(
-                stream__mountpoint=mountpoint,
-            ).first()
-
-            disconnection.period = DateTimeTZRange(
-                disconnection.period.lower, datetime.now().astimezone()
+            source = Source.objects.create(
+                stream=stream, timestamp=datetime.now().astimezone(), connection=True
             )
-
-            disconnection.save()
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Successfully saved {mountpoint} connection at {disconnection.period.upper}"
+                    f"Successfully saved {mountpoint} connection at {source.timestamp}"
                 )
             )

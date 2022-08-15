@@ -7,7 +7,7 @@
 
 <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
 <script src="{% static 'js/moment.js' %}"></script>
-<script src="{% static 'js/chart.js' %}"></script>
+<script src="{% static 'js/libs/chartjs/dist/chart.js' %}"></script>
 <script src="{% static 'js/libs/daterangepicker/daterangepicker.js' %}"></script>
 <script src="{% static 'js/global.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'js/libs/daterangepicker/daterangepicker.css' %}">
@@ -84,7 +84,7 @@
 		</div>
 	</div>
 	<div class="cell">
-		<div class="canvas"><canvas id="disconnections"></canvas></div>
+		<div class="canvas"><canvas id="sources"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
@@ -145,7 +145,7 @@
 		$(datepicker.container).find('.calendar-table').hide();
 	});
 
-	var defaultLegendClickHandler = Chart.defaults.global.legend.onClick;
+	var defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
 
 	var newLegendClickHandler = function (e, legendItem) {
 		defaultLegendClickHandler.call(this, e, legendItem);
@@ -230,7 +230,7 @@
 				},
 			},
 			scales: {
-				xAxes: [{
+				x: {
 					type: 'time',
 					time: {
 						tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
@@ -239,9 +239,9 @@
 					ticks: {
 						fontSize: 10,
 					},
-					offset: true,
-				}],
-				yAxes: [{
+					offset: true
+				},
+				y: {
 					stacked: true,
 					ticks: {
 						fontSize: 10,
@@ -252,7 +252,7 @@
 							}
 						},
 					},
-				}]
+				}
 			},
 			hover: {
 				onHover: function (e, el) {
@@ -321,7 +321,7 @@
 				},
 			},
 			scales: {
-				xAxes: [{
+				x: {
 					type: 'time',
 					time: {
 						tooltipFormat: 'ddd Do MMM, YYYY – h:mma',
@@ -331,14 +331,14 @@
 						fontSize: 10,
 					},
 					offset: true,
-				}],
-				yAxes: [{
+				},
+				y: {
 					stacked: true,
 					ticks: {
 						fontSize: 10,
 						beginAtZero: true,
 					},
-				}]
+				}
 			},
 			hover: {
 				onHover: function (e, el) {
@@ -369,7 +369,7 @@
 
 	var countriesId = document.getElementById('countries').getContext('2d');
 	var countriesChart = new Chart(countriesId, {
-		type: 'horizontalBar',
+		type: 'bar',
 		data: {
 			datasets: [{
 				data: [],
@@ -399,8 +399,9 @@
 					}
 				},
 			},
+			indexAxis: 'y',
 			scales: {
-				xAxes: [{
+				x: {
 					ticks: {
 						beginAtZero: true,
 						userCallback: function (label, index, labels) {
@@ -409,19 +410,19 @@
 							}
 						},
 					},
-				}],
-				yAxes: [{
+				},
+				yAyxes: {
 					gridLines: {
 						display: false,
 					},
-				}]
+				}
 			},
 		}
 	});
 
 	var refererId = document.getElementById('referer').getContext('2d');
 	var refererChart = new Chart(refererId, {
-		type: 'horizontalBar',
+		type: 'bar',
 		data: {
 			datasets: [{
 				data: [],
@@ -437,6 +438,7 @@
 			legend: {
 				display: false,
 			},
+			indexAxis: 'y',
 			tooltips: {
 				mode: 'label',
 				callbacks: {
@@ -449,7 +451,7 @@
 				},
 			},
 			scales: {
-				xAxes: [{
+				x: {
 					ticks: {
 						beginAtZero: true,
 						userCallback: function (label, index, labels) {
@@ -458,22 +460,22 @@
 							}
 						},
 					},
-				}],
-				yAxes: [{
+				},
+				y: {
 					gridLines: {
 						display: false,
 					},
-				}]
+				}
 			},
 		}
 	});
 
-	var disconnectionsId = document.getElementById('disconnections').getContext('2d');
-	var disconnectionsChart = new Chart(disconnectionsId, {
+	var sourcesId = document.getElementById('sources').getContext('2d');
+	var sourcesChart = new Chart(sourcesId, {
 		type: 'line',
 		options: {
 			title: {
-				text: 'Source disconnections',
+				text: 'Streams',
 			}
 		},
 		scales: {
@@ -552,11 +554,17 @@
 		});
 	}
 
-	function getDisconnections(data) {
-		$(disconnectionsChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/source/disconnection/', data, function (json) {
-			console.log(json.results)
-			$(disconnectionsChart.canvas).parent().siblings().fadeOut('fast')
+	function getSources(data) {
+		$(sourcesChart.canvas).parent().siblings().fadeIn('fast')
+		$.get('/source/connections/', data, function (json) {
+			$.each(json.results, function (index, stream) {
+				json.results[index].borderColor = colours[index];
+				json.results[index].stepped = true;
+			})
+			console.log(json.results);
+			sourcesChart.data.datasets = json.results;
+			sourcesChart.update();
+			$(sourcesChart.canvas).parent().siblings().fadeOut('fast');
 		});
 	}
 
@@ -724,7 +732,7 @@
 		getBrowsers(params);
 		getCountries(params);
 		getReferers(params);
-		getDisconnections(params);
+		getSources(params);
 	}
 
 	function timeSlotsPopulated() {
