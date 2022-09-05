@@ -44,10 +44,12 @@
 	</div>
 	<div class="item">
 		<div class="info">
-			<div id="legend"></div>
-			<p id="restart" class="upper">Restart streams</p>
+			<div class="legend-container">
+				<div id="legend"></div>
+			</div>
 			<div>
 				<div id="live"></div>
+				<p id="restart" class="upper">Restart streams</p>
 				<p class="upper"><a href="/logout/?next=/">Log out</a></p>
 			</div>
 		</div>
@@ -195,6 +197,80 @@
 		}
 	}
 
+	const getOrCreateLegendList = (chart, id) => {
+		const legendContainer = document.getElementById(id);
+		let listContainer = legendContainer.querySelector('ul');
+
+		if (!listContainer) {
+			listContainer = document.createElement('ul');
+			listContainer.style.display = 'flex';
+			listContainer.style.flexDirection = 'row';
+
+			legendContainer.appendChild(listContainer);
+		}
+
+		return listContainer;
+	};
+
+	const htmlLegendPlugin = {
+		id: 'htmlLegend',
+		afterUpdate(chart, args, options) {
+			const ul = getOrCreateLegendList(chart, options.containerID);
+
+			// Remove old legend items
+			while (ul.firstChild) {
+				ul.firstChild.remove();
+			}
+
+			// Reuse the built-in legendItems generator
+			const items = chart.options.plugins.legend.labels.generateLabels(chart);
+
+			items.forEach(item => {
+				const li = document.createElement('li');
+				li.style.alignItems = 'center';
+				li.style.cursor = 'pointer';
+				li.style.display = 'flex';
+				li.style.flexDirection = 'row';
+				li.style.marginLeft = '10px';
+
+				li.onclick = () => {
+					const { type } = chart.config;
+					if (type === 'pie' || type === 'doughnut') {
+						// Pie and doughnut charts only have a single dataset and visibility is per item
+						chart.toggleDataVisibility(item.index);
+					} else {
+						chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
+					}
+					chart.update();
+				};
+
+				// Color box
+				const boxSpan = document.createElement('span');
+				boxSpan.style.background = item.fillStyle;
+				boxSpan.style.borderColor = item.strokeStyle;
+				boxSpan.style.borderWidth = item.lineWidth + 'px';
+				boxSpan.style.display = 'inline-block';
+				boxSpan.style.height = '20px';
+				boxSpan.style.marginRight = '10px';
+				boxSpan.style.width = '20px';
+
+				// Text
+				const textContainer = document.createElement('p');
+				textContainer.style.color = item.fontColor;
+				textContainer.style.margin = 0;
+				textContainer.style.padding = 0;
+				textContainer.style.textDecoration = item.hidden ? 'line-through' : '';
+
+				const text = document.createTextNode(item.text);
+				textContainer.appendChild(text);
+
+				li.appendChild(boxSpan);
+				li.appendChild(textContainer);
+				ul.appendChild(li);
+			});
+		}
+	};
+
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
 	var listenerCountChart = new Chart(listenerCountId, {
 		type: 'bar',
@@ -202,12 +278,20 @@
 			datasets: [],
 		},
 		options: {
-			title: {
-				text: 'Listener count',
-			},
 			legend: {
-				display: false,
 				onClick: newLegendClickHandler, // for title totals
+			},
+			plugins: {
+				title: {
+					text: 'Listener count',
+				},
+				htmlLegend: {
+					// ID of the container to put the legend in
+					containerID: 'legend',
+				},
+				legend: {
+					display: false,
+				}
 			},
 			tooltips: {
 				mode: 'x',
@@ -238,15 +322,11 @@
 						tooltipFormat: 'do MMM, yyyy – h:mma',
 					},
 					stacked: true,
-					ticks: {
-						fontSize: 10,
-					},
 					offset: true
 				},
 				y: {
 					stacked: true,
 					ticks: {
-						fontSize: 10,
 						beginAtZero: true,
 						userCallback: function (label, index, labels) {
 							if (Math.floor(label) === label) {
@@ -283,7 +363,8 @@
 			// 		ctx.restore();
 			// 	}
 			// }
-		}
+		},
+		plugins: [htmlLegendPlugin],
 	});
 
 	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
@@ -293,12 +374,20 @@
 			datasets: [],
 		},
 		options: {
-			title: {
-				text: 'Listener hours',
-			},
 			legend: {
-				display: false,
 				onClick: newLegendClickHandler,
+			},
+			plugins: {
+				title: {
+					text: 'Listener hours',
+				},
+				htmlLegend: {
+					// ID of the container to put the legend in
+					containerID: 'legend',
+				},
+				legend: {
+					display: false,
+				}
 			},
 			tooltips: {
 				mode: 'x',
@@ -329,15 +418,11 @@
 						tooltipFormat: 'do MMM, yyyy – h:mma',
 					},
 					stacked: true,
-					ticks: {
-						fontSize: 10,
-					},
 					offset: true,
 				},
 				y: {
 					stacked: true,
 					ticks: {
-						fontSize: 10,
 						beginAtZero: true,
 					},
 				}
@@ -348,7 +433,8 @@
 				}
 			},
 			onClick: graphClickEvent,
-		}
+		},
+		plugins: [htmlLegendPlugin],
 	});
 
 	var browserId = document.getElementById('browser').getContext('2d');
@@ -363,9 +449,13 @@
 			labels: []
 		},
 		options: {
-			title: {
-				text: 'Browser',
+			plugins: {
+				title: {
+					text: 'Browser',
+				},
 			},
+			responsive: true,
+			maintainAspectRatio: false,
 		}
 	});
 
@@ -381,8 +471,10 @@
 			labels: []
 		},
 		options: {
-			title: {
-				text: 'Countries',
+			plugins: {
+				title: {
+					text: 'Countries',
+				},
 			},
 			legend: {
 				display: false,
@@ -413,11 +505,6 @@
 						},
 					},
 				},
-				y: {
-					gridLines: {
-						display: false,
-					},
-				}
 			},
 		}
 	});
@@ -434,8 +521,10 @@
 			labels: []
 		},
 		options: {
-			title: {
-				text: 'Referrals',
+			plugins: {
+				title: {
+					text: 'Referrals',
+				},
 			},
 			legend: {
 				display: false,
@@ -463,11 +552,6 @@
 						},
 					},
 				},
-				y: {
-					gridLines: {
-						display: false,
-					},
-				}
 			},
 		}
 	});
@@ -476,8 +560,10 @@
 	var sourcesChart = new Chart(sourcesId, {
 		type: 'line',
 		options: {
-			title: {
-				text: 'Streams',
+			plugins: {
+				title: {
+					text: 'Sources',
+				},
 			}
 		},
 		scales: {
@@ -486,7 +572,6 @@
 			},
 			y: {
 				ticks: {
-					fontSize: 10,
 					beginAtZero: true,
 				},
 			}
@@ -520,8 +605,8 @@
 			countriesChart.data.datasets[0].data = data;
 			countriesChart.data.labels = labels;
 			countriesChart.data.total = json['total'];
-			var title = countriesChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['distinct']);
-			countriesChart.options.title.text = title;
+			var title = countriesChart.options.plugins.title.text.split(':')[0] + ': ' + parseFloat(json['distinct']);
+			countriesChart.options.plugins.title.text = title;
 			countriesChart.data.countries = json.results.map(function (e) { return e.name });
 			countriesChart.update();
 			$(countriesChart.canvas).parent().siblings().fadeOut('fast');
@@ -536,8 +621,8 @@
 			refererChart.data.datasets[0].data = data;
 			refererChart.data.labels = labels;
 			refererChart.data.total = json['total'];
-			var title = refererChart.options.title.text.split(':')[0] + ': ' + parseFloat(json['total']) + ' / Direct: ' + parseFloat(json['direct']);
-			refererChart.options.title.text = title;
+			var title = refererChart.options.plugins.title.text.split(':')[0] + ': ' + parseFloat(json['total']) + ' / Direct: ' + parseFloat(json['direct']);
+			refererChart.options.plugins.title.text = title;
 			refererChart.update();
 			$(refererChart.canvas).parent().siblings().fadeOut('fast')
 			var domains = json.results.map(function (e) { return e.domain; });
@@ -589,54 +674,59 @@
 			}
 		});
 
-		var title = chart.options.title.text.split(':')[0] + ': ' + parseFloat(total.toFixed(2));
-		chart.options.title.text = title
+		var title = chart.options.plugins.title.text.split(':')[0] + ': ' + parseFloat(total.toFixed(2));
+		chart.options.plugins.title.text = title
 		chart.update();
+	}
+
+	function parseVerticalBarChartData(chart, json) {
+		var datasets = [];
+		var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
+		var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
+
+		$.each(streams, function (stream_index, stream) {
+			var data = [];
+			$.each(periods, function (period_index, period) {
+				data.push({
+					x: new Date(period),
+					y: json.results.filter(function (e) {
+						return e.stream === stream && e.period === period
+					}).map(function (e) {
+						return e.count
+					})[0] || 0
+				})
+			});
+			datasets.push({
+				label: stream,
+				backgroundColor: colours[stream_index],
+				borderColor: colours[stream_index],
+				data: data,
+			})
+		})
+
+		chart.data.datasets = datasets;
+		chart.update();
+		updateTitle(chart);
+		$(chart.canvas).parent().siblings().fadeOut('fast')
 	}
 
 	function getCount(data) {
 		$(listenerCountChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/listener/count/', data, function (json) {
-			var countDatasets = [];
-			var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
-			var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
-
-			$.each(streams, function (stream_index, stream) {
-				var count_data = [];
-				$.each(periods, function (period_index, period) {
-					count_data.push({
-						x: new Date(period),
-						y: json.results.filter(function (e) {
-							return e.stream === stream && e.period === period
-						}).map(function (e) {
-							return e.count
-						})[0] || 0
-					})
-				});
-				countDatasets.push({
-					label: stream,
-					backgroundColor: colours[stream_index],
-					borderColor: colours[stream_index],
-					data: count_data,
-				})
-			})
-
-			listenerCountChart.data.datasets = countDatasets;
-			listenerCountChart.update();
 			countTotals = json.totals;
-			updateTitle(listenerCountChart);
+			parseVerticalBarChartData(listenerCountChart, json);
 
 			var start = moment(json.period.start).format('YYYY/MM/DD HH');
 			var end = moment(json.period.end).format('YYYY/MM/DD HH');
 			$('#id_datepicker').data('daterangepicker').setStartDate(start);
 			$('#id_datepicker').data('daterangepicker').setEndDate(end);
 
-			var legendContainer = document.getElementById("legend");
-			// legendContainer.innerHTML = listenerCountChart.generateLegend();
-			var legendItems = legendContainer.getElementsByTagName('li');
-			for (var i = 0; i < legendItems.length; i += 1) {
-				legendItems[i].addEventListener("click", legendClickCallback, false);
-			}
+			// var legendContainer = document.getElementById("legend");
+			// // legendContainer.innerHTML = listenerCountChart.generateLegend();
+			// var legendItems = legendContainer.getElementsByTagName('li');
+			// for (var i = 0; i < legendItems.length; i += 1) {
+			// 	legendItems[i].addEventListener("click", legendClickCallback, false);
+			// }
 			$(listenerCountChart.canvas).parent().siblings().fadeOut('fast')
 		});
 	}
@@ -681,34 +771,7 @@
 	function getHours(data) {
 		$(listenerHoursChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/listener/hours/', data, function (json) {
-			var hoursDatasets = [];
-			var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
-			var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
-
-			$.each(streams, function (stream_index, stream) {
-				var hours_data = [];
-				$.each(periods, function (period_index, period) {
-					hours_data.push({
-						x: new Date(period),
-						y: json.results.filter(function (e) {
-							return e.stream === stream && e.period === period
-						}).map(function (e) {
-							return e.hours.toFixed(2)
-						})[0] || 0
-					})
-				});
-				hoursDatasets.push({
-					label: stream,
-					backgroundColor: colours[stream_index],
-					borderColor: colours[stream_index],
-					data: hours_data,
-				})
-			})
-
-			listenerHoursChart.data.datasets = hoursDatasets;
-			listenerHoursChart.update();
-			updateTitle(listenerHoursChart);
-			$(listenerHoursChart.canvas).parent().siblings().fadeOut('fast');
+			parseVerticalBarChartData(listenerHoursChart, json);
 		});
 	}
 
