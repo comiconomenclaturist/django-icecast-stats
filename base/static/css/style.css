@@ -5,6 +5,27 @@ body {
 	color: lightgrey;
 }
 
+body.login {
+	display: grid;
+	justify-content: center;
+}
+
+body.login h2 {
+	margin: 5px;
+}
+
+body.login button {
+	border: none;
+	padding: 5px 10px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 14px;
+	margin: 5px;
+	background-color: #45711A;
+	color: #eaeaea
+}
+
 h1 {
 	margin-top: 16px;
 }
@@ -30,6 +51,7 @@ h1 {
 .container .cell .canvas {
 	padding: 10px;
 	background-color: rgb(40, 40, 40);
+	height: 250px;
 }
 
 .container .cell h2 a {

@@ -152,6 +152,7 @@
 	var defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
 
 	var newLegendClickHandler = function (e, legendItem) {
+		console.log('test');
 		defaultLegendClickHandler.call(this, e, legendItem);
 		updateTitle(this.chart);
 	}
@@ -182,14 +183,15 @@
 
 	function graphClickEvent(event, array) {
 		if (array[0]) {
-			var index = array[0]._index;
-			var start = new Date(array[0]._xScale._timestamps.data[index]);
-			if (index == (array[0]._xScale._timestamps.data.length - 1)) {
+			var index = array[0].datasetIndex;
+			var start = array[0].element.$context.raw.x;
+			if (index == (event.chart.data.datasets[0].data.length - 1)) {
 				var end = $('#id_datepicker').data('daterangepicker').endDate._d
 			} else {
-				var end = new Date(array[0]._xScale._timestamps.data[index + 1]);
+				var end = event.chart.data.datasets[0].data[index + 1].x;
 			}
 			if (end - start > 900000) { // 15 minutes minimum interval
+				console.log(start, end);
 				$('#id_datepicker').data('daterangepicker').setStartDate(start);
 				$('#id_datepicker').data('daterangepicker').setEndDate(end);
 				$('.applyBtn')[0].click();
@@ -272,7 +274,7 @@
 	};
 
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
-	var listenerCountChart = new Chart(listenerCountId, {
+	const listenerCountChart = new Chart(listenerCountId, {
 		type: 'bar',
 		data: {
 			datasets: [],
@@ -291,7 +293,21 @@
 				},
 				legend: {
 					display: false,
-				}
+				},
+				tooltip: {
+					mode: 'x',
+					callbacks: {
+						afterLabel: (context) => {
+							datasets = context.chart.data.datasets;
+							window.total = datasets.reduce((sum, dataset) => {
+								return sum + dataset.data[context.dataIndex].y
+							}, 0)
+						},
+						footer: (context) => {
+							return `Total: ${window.total}`;
+						},
+					}
+				},
 			},
 			tooltips: {
 				mode: 'x',
@@ -304,15 +320,6 @@
 							return tooltipItem[0].xLabel.split('–')[0];
 						}
 					},
-					afterLabel: function (tooltipItem, data) {
-						window.total = 0;
-						for (i = 0; i < data.datasets.length; i++) {
-							window.total += parseFloat(data.datasets[i].data[tooltipItem.index].y)
-						}
-					},
-					footer: function () {
-						return 'Total: ' + window.total;
-					}
 				},
 			},
 			scales: {
@@ -322,17 +329,13 @@
 						tooltipFormat: 'do MMM, yyyy – h:mma',
 					},
 					stacked: true,
-					offset: true
+					offset: true,
 				},
 				y: {
 					stacked: true,
 					ticks: {
 						beginAtZero: true,
-						userCallback: function (label, index, labels) {
-							if (Math.floor(label) === label) {
-								return label;
-							}
-						},
+						precision: 0,
 					},
 				}
 			},
@@ -342,6 +345,7 @@
 				}
 			},
 			onClick: graphClickEvent,
+			maintainAspectRatio: false,
 			// animation: {
 			// 	onComplete: function(tooltipItem, data) {
 			// 		var chartInstance = this.chart;
@@ -368,7 +372,7 @@
 	});
 
 	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
-	var listenerHoursChart = new Chart(listenerHoursId, {
+	const listenerHoursChart = new Chart(listenerHoursId, {
 		type: 'bar',
 		data: {
 			datasets: [],
@@ -387,7 +391,21 @@
 				},
 				legend: {
 					display: false,
-				}
+				},
+				tooltip: {
+					mode: 'x',
+					callbacks: {
+						afterLabel: (context) => {
+							datasets = context.chart.data.datasets;
+							window.total = datasets.reduce((sum, dataset) => {
+								return sum + dataset.data[context.dataIndex].y
+							}, 0)
+						},
+						footer: (context) => {
+							return `Total: ${window.total.toFixed(2)}`;
+						},
+					}
+				},
 			},
 			tooltips: {
 				mode: 'x',
@@ -400,15 +418,6 @@
 							return tooltipItem[0].xLabel.split('–')[0];
 						}
 					},
-					afterLabel: function (tooltipItem, data) {
-						window.total = 0;
-						for (i = 0; i < data.datasets.length; i++) {
-							window.total += parseFloat(data.datasets[i].data[tooltipItem.index].y)
-						}
-					},
-					footer: function () {
-						return 'Total: ' + window.total.toFixed(2);
-					}
 				},
 			},
 			scales: {
@@ -433,12 +442,13 @@
 				}
 			},
 			onClick: graphClickEvent,
+			maintainAspectRatio: false,
 		},
 		plugins: [htmlLegendPlugin],
 	});
 
 	var browserId = document.getElementById('browser').getContext('2d');
-	var browserChart = new Chart(browserId, {
+	const browserChart = new Chart(browserId, {
 		type: 'doughnut',
 		data: {
 			datasets: [{
@@ -453,6 +463,13 @@
 				title: {
 					text: 'Browser',
 				},
+				legend: {
+					labels: {
+						font: {
+							size: 10,
+						},
+					},
+				},
 			},
 			responsive: true,
 			maintainAspectRatio: false,
@@ -460,7 +477,7 @@
 	});
 
 	var countriesId = document.getElementById('countries').getContext('2d');
-	var countriesChart = new Chart(countriesId, {
+	const countriesChart = new Chart(countriesId, {
 		type: 'bar',
 		data: {
 			datasets: [{
@@ -475,22 +492,23 @@
 				title: {
 					text: 'Countries',
 				},
-			},
-			legend: {
-				display: false,
-			},
-			tooltips: {
-				mode: 'label',
-				callbacks: {
-					title: function (tooltipItem, data) {
-						return data.countries[tooltipItem[0].index];
+				legend: {
+					display: false,
+				},
+				tooltip: {
+					callbacks: {
+						title: (context) => {
+							var index = context[0].dataIndex;
+							return context[0].chart.data.countries[index];
+						},
+						afterLabel: (context) => {
+							var val = parseFloat(context.dataset.data[context.dataIndex]);
+							window.percentage = val / context.chart.data.total * 100;
+						},
+						footer: function () {
+							return window.percentage.toFixed(2) + '% of total';
+						}
 					},
-					afterLabel: function (tooltipItem, data) {
-						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
-					},
-					footer: function () {
-						return window.percentage.toFixed(2) + '% of total';
-					}
 				},
 			},
 			indexAxis: 'y',
@@ -498,19 +516,23 @@
 				x: {
 					ticks: {
 						beginAtZero: true,
-						userCallback: function (label, index, labels) {
-							if (Math.floor(label) === label) {
-								return label;
-							}
-						},
+						precision: 0,
 					},
 				},
+				y: {
+					ticks: {
+						font: {
+							size: 14,
+						}
+					}
+				}
 			},
+			maintainAspectRatio: false,
 		}
 	});
 
 	var refererId = document.getElementById('referer').getContext('2d');
-	var refererChart = new Chart(refererId, {
+	const refererChart = new Chart(refererId, {
 		type: 'bar',
 		data: {
 			datasets: [{
@@ -525,57 +547,59 @@
 				title: {
 					text: 'Referrals',
 				},
-			},
-			legend: {
-				display: false,
-			},
-			indexAxis: 'y',
-			tooltips: {
-				mode: 'label',
-				callbacks: {
-					afterLabel: function (tooltipItem, data) {
-						window.percentage = parseFloat(data.datasets[0].data[tooltipItem.index]) / data.total * 100;
+				legend: {
+					display: false,
+				},
+				tooltip: {
+					callbacks: {
+						afterLabel: (context) => {
+							var val = parseFloat(context.dataset.data[context.dataIndex]);
+							window.percentage = val / context.chart.data.total * 100;
+						},
+						footer: function () {
+							return window.percentage.toFixed(2) + '% of total';
+						}
 					},
-					footer: function () {
-						return window.percentage.toFixed(2) + '% of total referrals';
-					}
 				},
 			},
+			indexAxis: 'y',
 			scales: {
 				x: {
 					ticks: {
 						beginAtZero: true,
-						userCallback: function (label, index, labels) {
-							if (Math.floor(label) === label) {
-								return label;
-							}
-						},
+						precision: 0,
 					},
 				},
 			},
+			maintainAspectRatio: false,
 		}
 	});
 
 	var sourcesId = document.getElementById('sources').getContext('2d');
-	var sourcesChart = new Chart(sourcesId, {
+	const sourcesChart = new Chart(sourcesId, {
 		type: 'line',
 		options: {
 			plugins: {
 				title: {
 					text: 'Sources',
 				},
-			}
-		},
-		scales: {
-			x: {
-				type: 'time',
-			},
-			y: {
-				ticks: {
-					beginAtZero: true,
+				legend: {
+					display: false,
 				},
-			}
-		}
+			},
+			scales: {
+				x: {
+					type: 'time',
+				},
+				y: {
+					ticks: {
+						beginAtZero: true,
+						precision: 0,
+					},
+				}
+			},
+			maintainAspectRatio: false,
+		},
 	})
 
 	function getBrowsers(data) {
@@ -601,7 +625,6 @@
 				);
 				labels.push(label);
 			});
-			// var labels = json.results.slice(0, colours.length).map(function(e) { return e.country.name });
 			countriesChart.data.datasets[0].data = data;
 			countriesChart.data.labels = labels;
 			countriesChart.data.total = json['total'];
@@ -648,7 +671,7 @@
 				json.results[index].borderColor = colours[index];
 				json.results[index].stepped = true;
 			})
-			console.log(json.results);
+			// console.log(json.results);
 			sourcesChart.data.datasets = json.results;
 			sourcesChart.update();
 			$(sourcesChart.canvas).parent().siblings().fadeOut('fast');

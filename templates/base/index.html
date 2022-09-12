@@ -8,7 +8,7 @@
 	<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}?v0.1">
 </head>
 
-<body>
+<body {% if request.path == "/login/" %}class="login"{% endif %}>
 	{% block content %}
 	{% endblock %}
 </body>
