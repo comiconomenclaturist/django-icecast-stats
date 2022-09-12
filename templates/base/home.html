@@ -252,9 +252,9 @@
 				boxSpan.style.borderColor = item.strokeStyle;
 				boxSpan.style.borderWidth = item.lineWidth + 'px';
 				boxSpan.style.display = 'inline-block';
-				boxSpan.style.height = '20px';
+				boxSpan.style.height = '15px';
 				boxSpan.style.marginRight = '10px';
-				boxSpan.style.width = '20px';
+				boxSpan.style.width = '15px';
 
 				// Text
 				const textContainer = document.createElement('p');
@@ -276,9 +276,6 @@
 	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
 	const listenerCountChart = new Chart(listenerCountId, {
 		type: 'bar',
-		data: {
-			datasets: [],
-		},
 		options: {
 			legend: {
 				onClick: newLegendClickHandler, // for title totals
@@ -291,22 +288,9 @@
 					// ID of the container to put the legend in
 					containerID: 'legend',
 				},
-				legend: {
-					display: false,
-				},
 				tooltip: {
 					mode: 'x',
-					callbacks: {
-						afterLabel: (context) => {
-							datasets = context.chart.data.datasets;
-							window.total = datasets.reduce((sum, dataset) => {
-								return sum + dataset.data[context.dataIndex].y
-							}, 0)
-						},
-						footer: (context) => {
-							return `Total: ${window.total}`;
-						},
-					}
+					callbacks: verticalChartCallbacks,
 				},
 			},
 			tooltips: {
@@ -334,7 +318,6 @@
 				y: {
 					stacked: true,
 					ticks: {
-						beginAtZero: true,
 						precision: 0,
 					},
 				}
@@ -345,7 +328,6 @@
 				}
 			},
 			onClick: graphClickEvent,
-			maintainAspectRatio: false,
 			// animation: {
 			// 	onComplete: function(tooltipItem, data) {
 			// 		var chartInstance = this.chart;
@@ -370,13 +352,10 @@
 		},
 		plugins: [htmlLegendPlugin],
 	});
-
+						
 	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
 	const listenerHoursChart = new Chart(listenerHoursId, {
 		type: 'bar',
-		data: {
-			datasets: [],
-		},
 		options: {
 			legend: {
 				onClick: newLegendClickHandler,
@@ -389,22 +368,9 @@
 					// ID of the container to put the legend in
 					containerID: 'legend',
 				},
-				legend: {
-					display: false,
-				},
 				tooltip: {
 					mode: 'x',
-					callbacks: {
-						afterLabel: (context) => {
-							datasets = context.chart.data.datasets;
-							window.total = datasets.reduce((sum, dataset) => {
-								return sum + dataset.data[context.dataIndex].y
-							}, 0)
-						},
-						footer: (context) => {
-							return `Total: ${window.total.toFixed(2)}`;
-						},
-					}
+					callbacks: verticalChartCallbacks,
 				},
 			},
 			tooltips: {
@@ -431,9 +397,6 @@
 				},
 				y: {
 					stacked: true,
-					ticks: {
-						beginAtZero: true,
-					},
 				}
 			},
 			hover: {
@@ -442,7 +405,6 @@
 				}
 			},
 			onClick: graphClickEvent,
-			maintainAspectRatio: false,
 		},
 		plugins: [htmlLegendPlugin],
 	});
@@ -464,6 +426,7 @@
 					text: 'Browser',
 				},
 				legend: {
+					display: true,
 					labels: {
 						font: {
 							size: 10,
@@ -472,7 +435,6 @@
 				},
 			},
 			responsive: true,
-			maintainAspectRatio: false,
 		}
 	});
 
@@ -492,22 +454,13 @@
 				title: {
 					text: 'Countries',
 				},
-				legend: {
-					display: false,
-				},
 				tooltip: {
 					callbacks: {
 						title: (context) => {
 							var index = context[0].dataIndex;
 							return context[0].chart.data.countries[index];
-						},
-						afterLabel: (context) => {
-							var val = parseFloat(context.dataset.data[context.dataIndex]);
-							window.percentage = val / context.chart.data.total * 100;
-						},
-						footer: function () {
-							return window.percentage.toFixed(2) + '% of total';
-						}
+							},
+						...horizontalChartCallbacks,
 					},
 				},
 			},
@@ -515,7 +468,6 @@
 			scales: {
 				x: {
 					ticks: {
-						beginAtZero: true,
 						precision: 0,
 					},
 				},
@@ -527,7 +479,6 @@
 					}
 				}
 			},
-			maintainAspectRatio: false,
 		}
 	});
 
@@ -547,31 +498,18 @@
 				title: {
 					text: 'Referrals',
 				},
-				legend: {
-					display: false,
-				},
 				tooltip: {
-					callbacks: {
-						afterLabel: (context) => {
-							var val = parseFloat(context.dataset.data[context.dataIndex]);
-							window.percentage = val / context.chart.data.total * 100;
-						},
-						footer: function () {
-							return window.percentage.toFixed(2) + '% of total';
-						}
-					},
+					callbacks: horizontalChartCallbacks,
 				},
 			},
 			indexAxis: 'y',
 			scales: {
 				x: {
 					ticks: {
-						beginAtZero: true,
 						precision: 0,
 					},
 				},
 			},
-			maintainAspectRatio: false,
 		}
 	});
 
@@ -583,9 +521,6 @@
 				title: {
 					text: 'Sources',
 				},
-				legend: {
-					display: false,
-				},
 			},
 			scales: {
 				x: {
@@ -593,12 +528,10 @@
 				},
 				y: {
 					ticks: {
-						beginAtZero: true,
 						precision: 0,
 					},
 				}
 			},
-			maintainAspectRatio: false,
 		},
 	})
 
