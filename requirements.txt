@@ -1,15 +1,15 @@
-asgiref==3.3.4
+asgiref==3.5.2
 astroid==2.4.2
 boto3==1.20.10
 botocore==1.23.10
 certifi==2020.6.20
 chardet==3.0.4
 charset-normalizer==2.0.7
-Django==3.2.14
+Django==4.1.1
 django-countries==7.2.1
 django-filter==2.4.0
 django-rest-framework==0.1.0
-djangorestframework==3.12.1
+djangorestframework==3.13.1
 docutils==0.15.2
 geoip2==2.9.0
 idna==2.10
@@ -27,7 +27,7 @@ s3transfer==0.5.0
 six==1.15.0
 sqlparse==0.4.2
 toml==0.10.2
-typed-ast==1.4.3
+typed-ast==1.5.4
 typing-extensions==3.10.0.0
 ua-parser==0.10.0
 urllib3==1.26.7
