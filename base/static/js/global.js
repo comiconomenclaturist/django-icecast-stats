@@ -21,6 +21,16 @@ var colours = ['#FF4E67', '#F77D50', '#EFBD52', '#DAE753', '#9ADF55', '#62D856',
 
 // Callbacks for ChartJS tooltips
 const verticalChartCallbacks = {
+    title: (context) => {
+        times = new Set(context[0].dataset.data.map(function (e) {
+            return e.x.toLocaleTimeString()
+        }));
+        if (times.size > 1) {
+            return moment(context[0].raw.x).format('ddd Do MMM, YYYY – LT');
+        } else {
+            return moment(context[0].raw.x).format('ddd Do MMM, YYYY');
+        }
+    },
     afterLabel: (context) => {
         datasets = context.chart.data.datasets;
         window.total = datasets.reduce((sum, dataset) => {

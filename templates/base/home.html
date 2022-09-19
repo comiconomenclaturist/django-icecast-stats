@@ -10,6 +10,7 @@
 <script src="{% static 'js/libs/chartjs/dist/chart.js' %}"></script>
 <script src="{% static 'js/libs/daterangepicker/daterangepicker.js' %}"></script>
 <script src="{% static 'js/global.js' %}"></script>
+<script src="{% static 'js/plugins.js' %}"></script>
 <script
 	src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'js/libs/daterangepicker/daterangepicker.css' %}">
@@ -58,37 +59,37 @@
 
 <div class="container">
 	<div class="cell">
-		<div class="canvas"><canvas id="listenerCount"></canvas></div>
+		<div class="canvas"><canvas id="listenerCount" data-name="Listener count"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
 	</div>
 	<div class="cell">
-		<div class="canvas"><canvas id="listenerHours"></canvas></div>
+		<div class="canvas"><canvas id="listenerHours" data-name="Listener hours"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
 	</div>
 	<div class="cell">
-		<div class="canvas"><canvas id="browser"></canvas></div>
+		<div class="canvas"><canvas id="browser" data-name="Browser"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
 	</div>
 	<div class="cell">
-		<div class="canvas"><canvas id="countries"></canvas></div>
+		<div class="canvas"><canvas id="countries" data-name="Countries"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
 	</div>
 	<div class="cell">
-		<div class="canvas"><canvas id="referer"></canvas></div>
+		<div class="canvas"><canvas id="referer" data-name="Referrals"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
 	</div>
 	<div class="cell">
-		<div class="canvas"><canvas id="sources"></canvas></div>
+		<div class="canvas"><canvas id="sources" data-name="Sources"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
@@ -149,171 +150,51 @@
 		$(datepicker.container).find('.calendar-table').hide();
 	});
 
-	var defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
-
-	var newLegendClickHandler = function (e, legendItem) {
-		console.log('test');
-		defaultLegendClickHandler.call(this, e, legendItem);
-		updateTitle(this.chart);
-	}
-
-	function legendClickCallback(event) {
-		event = event || window.event;
-		var target = event.target || event.srcElement;
-
-		while (target.nodeName !== 'LI') {
-			target = target.parentElement;
-		}
-		var parent = target.parentElement;
-		var index = Array.prototype.slice.call(parent.children).indexOf(target);
-
-		$.each([listenerCountChart, listenerHoursChart], function (i, chart) {
-			var meta = chart.getDatasetMeta(index);
-			if (meta.hidden === null) {
-				meta.hidden = !chart.data.datasets[index].hidden;
-				target.classList.add('hidden');
-			} else {
-				target.classList.remove('hidden');
-				meta.hidden = null;
-			}
-			updateTitle(chart);
-			chart.update();
-		});
-	}
-
 	function graphClickEvent(event, array) {
 		if (array[0]) {
-			var index = array[0].datasetIndex;
+			var index = array[0].index;
 			var start = array[0].element.$context.raw.x;
-			if (index == (event.chart.data.datasets[0].data.length - 1)) {
-				var end = $('#id_datepicker').data('daterangepicker').endDate._d
+			var data = event.chart.data.datasets[0].data;
+
+			if (index < (data.length - 1)) {
+				var end = data[index + 1].x;
 			} else {
-				var end = event.chart.data.datasets[0].data[index + 1].x;
+				var diff = data[index].x - data[index - 1].x;
+				var end = moment(data[index].x).add(diff, 'ms').toDate();
 			}
 			if (end - start > 900000) { // 15 minutes minimum interval
-				console.log(start, end);
-				$('#id_datepicker').data('daterangepicker').setStartDate(start);
-				$('#id_datepicker').data('daterangepicker').setEndDate(end);
-				$('.applyBtn')[0].click();
+				$('#id_period_0').val(start.toISOString());
+				$('#id_period_1').val(end.toISOString());
+				getData();
 			}
 		}
 	}
 
-	const getOrCreateLegendList = (chart, id) => {
-		const legendContainer = document.getElementById(id);
-		let listContainer = legendContainer.querySelector('ul');
-
-		if (!listContainer) {
-			listContainer = document.createElement('ul');
-			listContainer.style.display = 'flex';
-			listContainer.style.flexDirection = 'row';
-
-			legendContainer.appendChild(listContainer);
-		}
-
-		return listContainer;
-	};
-
-	const htmlLegendPlugin = {
-		id: 'htmlLegend',
-		afterUpdate(chart, args, options) {
-			const ul = getOrCreateLegendList(chart, options.containerID);
-
-			// Remove old legend items
-			while (ul.firstChild) {
-				ul.firstChild.remove();
-			}
-
-			// Reuse the built-in legendItems generator
-			const items = chart.options.plugins.legend.labels.generateLabels(chart);
-
-			items.forEach(item => {
-				const li = document.createElement('li');
-				li.style.alignItems = 'center';
-				li.style.cursor = 'pointer';
-				li.style.display = 'flex';
-				li.style.flexDirection = 'row';
-				li.style.marginLeft = '10px';
-
-				li.onclick = () => {
-					const { type } = chart.config;
-					if (type === 'pie' || type === 'doughnut') {
-						// Pie and doughnut charts only have a single dataset and visibility is per item
-						chart.toggleDataVisibility(item.index);
-					} else {
-						chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
-					}
-					chart.update();
-				};
-
-				// Color box
-				const boxSpan = document.createElement('span');
-				boxSpan.style.background = item.fillStyle;
-				boxSpan.style.borderColor = item.strokeStyle;
-				boxSpan.style.borderWidth = item.lineWidth + 'px';
-				boxSpan.style.display = 'inline-block';
-				boxSpan.style.height = '15px';
-				boxSpan.style.marginRight = '10px';
-				boxSpan.style.width = '15px';
-
-				// Text
-				const textContainer = document.createElement('p');
-				textContainer.style.color = item.fontColor;
-				textContainer.style.margin = 0;
-				textContainer.style.padding = 0;
-				textContainer.style.textDecoration = item.hidden ? 'line-through' : '';
-
-				const text = document.createTextNode(item.text);
-				textContainer.appendChild(text);
-
-				li.appendChild(boxSpan);
-				li.appendChild(textContainer);
-				ul.appendChild(li);
-			});
-		}
-	};
-
-	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
-	const listenerCountChart = new Chart(listenerCountId, {
+	const verticalBarChartConfig = {
 		type: 'bar',
 		options: {
-			legend: {
-				onClick: newLegendClickHandler, // for title totals
-			},
 			plugins: {
 				title: {
-					text: 'Listener count',
-				},
-				htmlLegend: {
-					// ID of the container to put the legend in
-					containerID: 'legend',
+					text: (e) => {
+						return e.chart.canvas.getAttribute('data-name');
+					}
 				},
 				tooltip: {
 					mode: 'x',
 					callbacks: verticalChartCallbacks,
 				},
-			},
-			tooltips: {
-				mode: 'x',
-				callbacks: {
-					title: function (tooltipItem, data) {
-						times = new Set(data.datasets[0].data.map(function (e) { return e.x.toLocaleTimeString() }));
-						if (times.size > 1) {
-							return tooltipItem[0].xLabel;
-						} else {
-							return tooltipItem[0].xLabel.split('–')[0];
-						}
-					},
+				htmlLegend: {
+					// ID of the container to put the legend in
+					containerID: 'legend',
 				},
 			},
 			scales: {
 				x: {
-					type: 'time',
-					time: {
-						tooltipFormat: 'do MMM, yyyy – h:mma',
-					},
 					stacked: true,
 					offset: true,
+					ticks: {
+						source: 'labels'
+					},
 				},
 				y: {
 					stacked: true,
@@ -322,103 +203,30 @@
 					},
 				}
 			},
-			hover: {
-				onHover: function (e, el) {
-					$('#listenerCount').css("cursor", el[0] ? "pointer" : "default");
-				}
+			onHover: (e, el) => {
+				$('#'+e.chart.canvas.id).css("cursor", el[0] ? "pointer" : "default");
 			},
 			onClick: graphClickEvent,
-			// animation: {
-			// 	onComplete: function(tooltipItem, data) {
-			// 		var chartInstance = this.chart;
-			// 		var ctx = chartInstance.ctx;
-			// 		var height = chartInstance.controller.boxes[0].maxHeight;
-			// 		ctx.save();
-			// 		ctx.font = '10px Verdana';
-			// 		ctx.fillStyle = '#222';
-			// 		ctx.textAlign = 'right'; 
-			// 		ctx.rotate(90 * Math.PI / 180); // 90 degree rotation
-			// 		Chart.helpers.each(this.data.datasets.forEach(function (dataset, i) {
-			// 			var meta = chartInstance.controller.getDatasetMeta(i);
-			// 			var total = 0;
-			// 			Chart.helpers.each(meta.data.forEach(function (bar, index) {
-			// 				total += dataset.data[index].y;
-			// 				ctx.fillText(dataset.data[index].y, (height + 30), ((bar._model.x * -1) + 4));
-			// 			}), this)
-			// 		}), this);
-			// 		ctx.restore();
-			// 	}
-			// }
 		},
+	}
+	
+	var listenerCountId = document.getElementById('listenerCount').getContext('2d');
+	const listenerCountChart = new Chart(listenerCountId, {
+		...verticalBarChartConfig,
 		plugins: [htmlLegendPlugin],
-	});
+	})
 						
 	var listenerHoursId = document.getElementById('listenerHours').getContext('2d');
-	const listenerHoursChart = new Chart(listenerHoursId, {
-		type: 'bar',
-		options: {
-			legend: {
-				onClick: newLegendClickHandler,
-			},
-			plugins: {
-				title: {
-					text: 'Listener hours',
-				},
-				htmlLegend: {
-					// ID of the container to put the legend in
-					containerID: 'legend',
-				},
-				tooltip: {
-					mode: 'x',
-					callbacks: verticalChartCallbacks,
-				},
-			},
-			tooltips: {
-				mode: 'x',
-				callbacks: {
-					title: function (tooltipItem, data) {
-						times = new Set(data.datasets[0].data.map(function (e) { return e.x.toLocaleTimeString() }));
-						if (times.size > 1) {
-							return tooltipItem[0].xLabel;
-						} else {
-							return tooltipItem[0].xLabel.split('–')[0];
-						}
-					},
-				},
-			},
-			scales: {
-				x: {
-					type: 'time',
-					time: {
-						tooltipFormat: 'do MMM, yyyy – h:mma',
-					},
-					stacked: true,
-					offset: true,
-				},
-				y: {
-					stacked: true,
-				}
-			},
-			hover: {
-				onHover: function (e, el) {
-					$('#listenerHours').css("cursor", el[0] ? "pointer" : "default");
-				}
-			},
-			onClick: graphClickEvent,
-		},
-		plugins: [htmlLegendPlugin],
-	});
+	const listenerHoursChart = new Chart(listenerHoursId, verticalBarChartConfig);
 
 	var browserId = document.getElementById('browser').getContext('2d');
 	const browserChart = new Chart(browserId, {
 		type: 'doughnut',
 		data: {
 			datasets: [{
-				data: [],
 				backgroundColor: colours,
 				borderColor: colours,
 			}],
-			labels: []
 		},
 		options: {
 			plugins: {
@@ -434,20 +242,18 @@
 					},
 				},
 			},
-			responsive: true,
 		}
 	});
 
 	var countriesId = document.getElementById('countries').getContext('2d');
+
 	const countriesChart = new Chart(countriesId, {
 		type: 'bar',
 		data: {
 			datasets: [{
-				data: [],
 				backgroundColor: colours,
 				borderColor: colours,
 			}],
-			labels: []
 		},
 		options: {
 			plugins: {
@@ -487,11 +293,9 @@
 		type: 'bar',
 		data: {
 			datasets: [{
-				data: [],
 				backgroundColor: colours,
 				borderColor: colours,
 			}],
-			labels: []
 		},
 		options: {
 			plugins: {
@@ -534,6 +338,84 @@
 			},
 		},
 	})
+
+	const charts = [listenerCountChart, listenerHoursChart, sourcesChart];
+
+	function parseVerticalBarChartData(chart, json) {
+		var datasets = [];
+		var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
+		var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
+
+		$.each(streams, function (stream_index, stream) {
+			var data = [];
+			$.each(periods, function (period_index, period) {
+				data.push({
+					x: new Date(period),
+					y: json.results.filter(function (e) {
+						return e.stream === stream && e.period === period
+					}).map(function (e) {
+						return e.count
+					})[0] || 0
+				})
+			});
+			datasets.push({
+				label: stream,
+				backgroundColor: colours[stream_index],
+				borderColor: colours[stream_index],
+				data: data,
+			})
+		})
+
+		chart.data.datasets = datasets;
+
+		var hours = new Set(periods.map((period) => {
+			return new Date(period).getHours();
+		}))
+		var minutes = new Set(periods.map((period) => {
+			return new Date(period).getMinutes();
+		}))
+		if (hours.size == 1 && minutes.size == 1) {
+			chart.data.labels = periods.map((period) => {
+				var date = new Date(period);
+				return moment(date).format("D MMM")
+			});
+		} else if (minutes.size == 1) {
+			chart.data.labels = periods.map((period) => {
+				var date = new Date(period);
+				return moment(date).format('ha')
+			});
+		} else {
+			chart.data.labels = periods.map((period) => {
+				var date = new Date(period);
+				return moment(date).format('h:mma')
+			});
+		}
+		chart.update();
+		updateTitle(chart);
+		$(chart.canvas).parent().siblings().fadeOut('fast')
+	}
+
+	function getCount(data) {
+		$(listenerCountChart.canvas).parent().siblings().fadeIn('fast')
+		$.get('/listener/count/', data, function (json) {
+			countTotals = json.totals;
+			parseVerticalBarChartData(listenerCountChart, json);
+
+			var start = moment(json.period.start).format('YYYY/MM/DD HH');
+			var end = moment(json.period.end).format('YYYY/MM/DD HH');
+			$('#id_datepicker').data('daterangepicker').setStartDate(start);
+			$('#id_datepicker').data('daterangepicker').setEndDate(end);
+
+			$(listenerCountChart.canvas).parent().siblings().fadeOut('fast')
+		});
+	}
+
+	function getHours(data) {
+		$(listenerHoursChart.canvas).parent().siblings().fadeIn('fast')
+		$.get('/listener/hours/', data, function (json) {
+			parseVerticalBarChartData(listenerHoursChart, json);
+		});
+	}
 
 	function getBrowsers(data) {
 		$(browserChart.canvas).parent().siblings().fadeIn('fast')
@@ -604,7 +486,6 @@
 				json.results[index].borderColor = colours[index];
 				json.results[index].stepped = true;
 			})
-			// console.log(json.results);
 			sourcesChart.data.datasets = json.results;
 			sourcesChart.update();
 			$(sourcesChart.canvas).parent().siblings().fadeOut('fast');
@@ -633,102 +514,6 @@
 		var title = chart.options.plugins.title.text.split(':')[0] + ': ' + parseFloat(total.toFixed(2));
 		chart.options.plugins.title.text = title
 		chart.update();
-	}
-
-	function parseVerticalBarChartData(chart, json) {
-		var datasets = [];
-		var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
-		var periods = Array.from(new Set(json.results.map(function (e) { return e['period'] })));
-
-		$.each(streams, function (stream_index, stream) {
-			var data = [];
-			$.each(periods, function (period_index, period) {
-				data.push({
-					x: new Date(period),
-					y: json.results.filter(function (e) {
-						return e.stream === stream && e.period === period
-					}).map(function (e) {
-						return e.count
-					})[0] || 0
-				})
-			});
-			datasets.push({
-				label: stream,
-				backgroundColor: colours[stream_index],
-				borderColor: colours[stream_index],
-				data: data,
-			})
-		})
-
-		chart.data.datasets = datasets;
-		chart.update();
-		updateTitle(chart);
-		$(chart.canvas).parent().siblings().fadeOut('fast')
-	}
-
-	function getCount(data) {
-		$(listenerCountChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/listener/count/', data, function (json) {
-			countTotals = json.totals;
-			parseVerticalBarChartData(listenerCountChart, json);
-
-			var start = moment(json.period.start).format('YYYY/MM/DD HH');
-			var end = moment(json.period.end).format('YYYY/MM/DD HH');
-			$('#id_datepicker').data('daterangepicker').setStartDate(start);
-			$('#id_datepicker').data('daterangepicker').setEndDate(end);
-
-			// var legendContainer = document.getElementById("legend");
-			// // legendContainer.innerHTML = listenerCountChart.generateLegend();
-			// var legendItems = legendContainer.getElementsByTagName('li');
-			// for (var i = 0; i < legendItems.length; i += 1) {
-			// 	legendItems[i].addEventListener("click", legendClickCallback, false);
-			// }
-			$(listenerCountChart.canvas).parent().siblings().fadeOut('fast')
-		});
-	}
-
-	function getCount2(data) {
-		$.get('/listener/count2/', data, function (json) {
-			var countDatasets = [];
-			var streams = json.totals.map(function (e) { return e.stream });
-
-			$.each(streams, function (stream_index, stream) {
-				var count_data = [];
-
-				$.each(json.results, function (result) {
-					$.each(json.results[result], function (i, e) {
-						if (e['stream'] === stream) {
-							count_data.push({
-								x: new Date(result),
-								y: e['count'],
-							})
-						}
-					})
-				});
-
-				countDatasets.push({
-					label: stream,
-					backgroundColor: colours[stream_index],
-					borderColor: colours[stream_index],
-					data: count_data,
-				})
-			});
-
-			listenerCountChart.data.datasets = countDatasets;
-			listenerCountChart.update();
-
-			var start = moment(json.results[0].period).format('YYYY/MM/DD HH');
-			var end = moment(json.results[json.results.length - 1].period).format('YYYY/MM/DD HH');
-			$('#id_datepicker').data('daterangepicker').setStartDate(start);
-			$('#id_datepicker').data('daterangepicker').setEndDate(end);
-		});
-	}
-
-	function getHours(data) {
-		$(listenerHoursChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/listener/hours/', data, function (json) {
-			parseVerticalBarChartData(listenerHoursChart, json);
-		});
 	}
 
 	function getLiveListeners() {
