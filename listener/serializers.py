@@ -54,14 +54,14 @@ class CountSerializer(serializers.ModelSerializer):
 class HoursSerializer(serializers.ModelSerializer):
     period = serializers.DateTimeField()
     stream = serializers.ReadOnlyField()
-    hours = serializers.FloatField(read_only=True)
+    count = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Listener
         fields = (
             "period",
             "stream",
-            "hours",
+            "count",
         )
 
 

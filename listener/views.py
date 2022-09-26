@@ -1,17 +1,5 @@
-from django.db.models import (
-    Sum,
-    Count,
-    Value,
-    DateTimeField,
-    ExpressionWrapper,
-    F,
-    Q,
-    Func,
-    DurationField,
-    FloatField,
-    CharField,
-)
-from django.db.models.functions import Least, Greatest, Extract, Cast
+from django.db.models import *
+from django.db.models.functions import Least, Greatest, Extract, Cast, Round
 from django.contrib.postgres.fields.ranges import RangeStartsWith, RangeEndsWith
 from django.contrib.postgres.fields import DateTimeRangeField as DTRangeField
 from psycopg2.extras import DateTimeTZRange
@@ -266,6 +254,10 @@ class CountViewSet(ListenerReadOnlyModelViewSet):
         return Response(response)
 
 
+class RoundWithPlaces(Func):
+    function = "ROUND"
+
+
 class HoursViewSet(ListenerReadOnlyModelViewSet):
     def totals(self):
         qs = Listener.objects.none()
@@ -293,8 +285,11 @@ class HoursViewSet(ListenerReadOnlyModelViewSet):
                 .values(self.streams)
                 .order_by(self.streams)
                 .annotate(
-                    hours=ExpressionWrapper(
-                        Extract(Sum("length"), "epoch") / 3600,
+                    count=ExpressionWrapper(
+                        Round(
+                            Extract(Sum("length"), "epoch") / 36,
+                        )
+                        / 100,
                         output_field=FloatField(),
                     ),
                     period=Value(date_range.lower, DateTimeField()),
