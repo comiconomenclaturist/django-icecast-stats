@@ -1,5 +1,5 @@
 from django.db.models import *
-from django.db.models.functions import Least, Greatest, Extract, Cast
+from django.db.models.functions import Least, Greatest, Extract, Cast, Round
 from django.contrib.postgres.fields.ranges import RangeStartsWith, RangeEndsWith
 from django.contrib.postgres.fields import DateTimeRangeField as DTRangeField
 from psycopg2.extras import DateTimeTZRange
@@ -285,12 +285,11 @@ class HoursViewSet(ListenerReadOnlyModelViewSet):
                 .values(self.streams)
                 .order_by(self.streams)
                 .annotate(
-                    count=RoundWithPlaces(
-                        ExpressionWrapper(
-                            Extract(Sum("length"), "epoch") / 3600,
-                            output_field=FloatField(),
-                        ),
-                        2,
+                    count=ExpressionWrapper(
+                        Round(
+                            Extract(Sum("length"), "epoch") / 36,
+                        )
+                        / 100,
                         output_field=FloatField(),
                     ),
                     period=Value(date_range.lower, DateTimeField()),
