@@ -285,15 +285,12 @@ class HoursViewSet(ListenerReadOnlyModelViewSet):
                 .values(self.streams)
                 .order_by(self.streams)
                 .annotate(
-                    count=Cast(
-                        RoundWithPlaces(
-                            ExpressionWrapper(
-                                Extract(Sum("length"), "epoch") / 3600,
-                                output_field=FloatField(),
-                            ),
-                            2,
+                    count=RoundWithPlaces(
+                        ExpressionWrapper(
+                            Extract(Sum("length"), "epoch") / 3600,
                             output_field=FloatField(),
                         ),
+                        2,
                         output_field=FloatField(),
                     ),
                     period=Value(date_range.lower, DateTimeField()),
