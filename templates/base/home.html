@@ -174,11 +174,6 @@
 		type: 'bar',
 		options: {
 			plugins: {
-				title: {
-					text: (e) => {
-						return e.chart.canvas.getAttribute('data-name');
-					}
-				},
 				tooltip: {
 					mode: 'x',
 					callbacks: verticalChartCallbacks,
@@ -516,7 +511,7 @@
 			}
 		});
 
-		var title = chart.options.plugins.title.text.split(':')[0] + ': ' + parseFloat(total.toFixed(2));
+		var title = chart.canvas.getAttribute('data-name') + ': ' + parseFloat(total.toFixed(2));
 		chart.options.plugins.title.text = title
 		chart.update();
 	}
