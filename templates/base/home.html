@@ -407,6 +407,11 @@
 			$('#id_datepicker').data('daterangepicker').setEndDate(end);
 
 			$(listenerCountChart.canvas).parent().siblings().fadeOut('fast')
+		}).fail(function(jqXHR, textStatus, errorThrown) {
+			if (errorThrown == 'Forbidden') {
+				uri = '/login/?next=/' + encodeURIComponent('?' + data);
+				window.location.href = uri;
+			}
 		});
 	}
 
