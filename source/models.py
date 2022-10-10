@@ -8,7 +8,7 @@ class Source(models.Model):
         related_name="connections",
         on_delete=models.PROTECT,
     )
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(auto_now_add=True)
     connection = models.BooleanField()
 
     class Meta:

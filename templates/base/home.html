@@ -188,7 +188,7 @@
 					stacked: true,
 					offset: true,
 					ticks: {
-						source: 'labels'
+						source: 'labels',
 					},
 				},
 				y: {
@@ -320,10 +320,16 @@
 				title: {
 					text: 'Sources',
 				},
+				tooltip: {
+					callbacks: labelColor,
+				},
 			},
 			scales: {
 				x: {
 					type: 'time',
+					time: {
+						unit: 'hour',
+					}
 				},
 				y: {
 					ticks: {
@@ -478,13 +484,15 @@
 			});
 		});
 	}
-
+	
 	function getSources(data) {
 		$(sourcesChart.canvas).parent().siblings().fadeIn('fast')
 		$.get('/source/connections/', data, function (json) {
 			$.each(json.results, function (index, stream) {
 				json.results[index].borderColor = colours[index];
-				json.results[index].stepped = true;
+				json.results[index].backgroundColor = colours[index] + 0.2 * 255;
+				json.results[index].fill = true;
+				json.results[index].stepped = 'after';
 			})
 			sourcesChart.data.datasets = json.results;
 			sourcesChart.update();

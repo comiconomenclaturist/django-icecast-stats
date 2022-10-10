@@ -254,10 +254,6 @@ class CountViewSet(ListenerReadOnlyModelViewSet):
         return Response(response)
 
 
-class RoundWithPlaces(Func):
-    function = "ROUND"
-
-
 class HoursViewSet(ListenerReadOnlyModelViewSet):
     def totals(self):
         qs = Listener.objects.none()

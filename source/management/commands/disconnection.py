@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-from datetime import datetime
 from source.models import Source
 from listener.models import Stream
 
@@ -17,9 +16,7 @@ class Command(BaseCommand):
         if streams:
             stream = streams.get()
 
-            source = Source.objects.create(
-                stream=stream, timestamp=datetime.now().astimezone(), connection=False
-            )
+            source = Source.objects.create(stream=stream, connection=False)
 
             self.stdout.write(
                 self.style.SUCCESS(

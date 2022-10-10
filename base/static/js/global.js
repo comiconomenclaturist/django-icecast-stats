@@ -20,6 +20,16 @@ Chart.defaults.scale.ticks.font = {
 var colours = ['#FF4E67', '#F77D50', '#EFBD52', '#DAE753', '#9ADF55', '#62D856', '#58D07E', '#59C9AB', '#5AB3C1']
 
 // Callbacks for ChartJS tooltips
+const labelColor = {
+    labelColor: (context) => {
+        return {
+            borderColor: colours[context.datasetIndex],
+            backgroundColor: colours[context.datasetIndex],
+            borderWidth: 2,
+        };
+    },
+}
+
 const verticalChartCallbacks = {
     title: (context) => {
         times = new Set(context[0].dataset.data.map(function (e) {
@@ -40,6 +50,7 @@ const verticalChartCallbacks = {
     footer: (context) => {
         return `Total: ${parseFloat(window.total.toFixed(2))}`;
     },
+    ...labelColor,
 }
 
 const horizontalChartCallbacks = {
