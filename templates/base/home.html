@@ -326,7 +326,7 @@
 			},
 			scales: {
 				x: {
-					type: 'time',
+					type: 'timeseries',
 					time: {
 						unit: 'hour',
 					}
@@ -492,9 +492,12 @@
 				json.results[index].borderColor = colours[index];
 				json.results[index].backgroundColor = colours[index] + 0.2 * 255;
 				json.results[index].fill = true;
-				json.results[index].stepped = 'after';
+				json.results[index].stepped = 'before';
 			})
 			sourcesChart.data.datasets = json.results;
+			data = new URLSearchParams(data)
+			sourcesChart.options.scales.x.min = data.get('period_0');
+			sourcesChart.options.scales.x.max = data.get('period_1');
 			sourcesChart.update();
 			$(sourcesChart.canvas).parent().siblings().fadeOut('fast');
 		});

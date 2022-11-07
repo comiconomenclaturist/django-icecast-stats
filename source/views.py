@@ -19,7 +19,7 @@ class ConnectionViewset(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
                 queryset = queryset.filter(station=self.form.cleaned_data["station"])
 
             queryset = queryset.prefetch_related(
-                Prefetch("connections", queryset=sources)
+                Prefetch("connections", queryset=sources.order_by("timestamp"))
             )
 
             return queryset
