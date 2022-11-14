@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from django.db.models import Prefetch
+from django.db.models import Prefetch, OuterRef, Subquery, Q
 from listener.models import Stream
 from listener.views import GetParamsMixin
 from .serializers import SourceSerializer
@@ -9,20 +9,30 @@ from .models import Source
 class ConnectionViewset(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         if self.form.is_valid():
+            previous_status = Source.objects.filter(
+                timestamp__lte=self.period.lower, stream=OuterRef("stream")
+            ).order_by("-timestamp")[:1]
+
+            next_status = Source.objects.filter(
+                timestamp__gte=self.period.upper, stream=OuterRef("stream")
+            ).order_by("timestamp")[:1]
+
             sources = Source.objects.filter(
-                timestamp__range=[self.period.lower, self.period.upper]
+                Q(id__in=Subquery(previous_status.values("id")))
+                | Q(timestamp__range=[self.period.lower, self.period.upper])
+                | Q(id__in=Subquery(next_status.values("id")))
             )
 
-            queryset = Stream.objects.filter(connections__in=sources).distinct()
+            qs = Stream.objects.distinct()
 
             if self.form.cleaned_data["station"]:
-                queryset = queryset.filter(station=self.form.cleaned_data["station"])
+                qs = qs.filter(station=self.form.cleaned_data["station"])
 
-            queryset = queryset.prefetch_related(
+            qs = qs.prefetch_related(
                 Prefetch("connections", queryset=sources.order_by("timestamp"))
             )
 
-            return queryset
+            return qs
 
         return Stream.objects.none()
 
