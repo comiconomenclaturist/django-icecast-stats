@@ -23,7 +23,7 @@ class ConnectionViewset(GetParamsMixin, viewsets.ReadOnlyModelViewSet):
                 | Q(id__in=Subquery(next_status.values("id")))
             )
 
-            qs = Stream.objects.distinct()
+            qs = Stream.objects.filter(connections__in=sources).distinct()
 
             if self.form.cleaned_data["station"]:
                 qs = qs.filter(station=self.form.cleaned_data["station"])
