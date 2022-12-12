@@ -2,7 +2,7 @@ asgiref==3.5.2
 astroid==2.4.2
 boto3==1.20.10
 botocore==1.23.10
-certifi==2020.6.20
+certifi==2022.12.7
 chardet==3.0.4
 charset-normalizer==2.0.7
 Django==4.1.1
