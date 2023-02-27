@@ -8,6 +8,7 @@ class SourceAdmin(admin.ModelAdmin):
         "timestamp",
         "connection",
     )
+    list_filter = ("stream__station", "stream__mountpoint", "timestamp")
 
 
 admin.site.register(Source, SourceAdmin)
