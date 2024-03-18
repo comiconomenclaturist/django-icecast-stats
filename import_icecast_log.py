@@ -106,7 +106,7 @@ try:
     if filename.startswith("access.log"):
         listeners = []
 
-        with gzip.open(filepath, "rt", encoding="ISO-8859-1") as log_file:
+        with open(filepath, "r", encoding="ISO-8859-1") as log_file:
             for line in log_file:
                 match = re.match(regex, line)
 
