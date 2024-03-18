@@ -88,12 +88,12 @@
 			<div class="loader"></div>
 		</div>
 	</div>
-	<div class="cell">
+	<!-- <div class="cell">
 		<div class="canvas"><canvas id="sources" data-name="Sources"></canvas></div>
 		<div class="overlay">
 			<div class="loader"></div>
 		</div>
-	</div>
+	</div> -->
 </div>
 
 <script type="text/javascript">
@@ -312,34 +312,35 @@
 		}
 	});
 
-	var sourcesId = document.getElementById('sources').getContext('2d');
-	const sourcesChart = new Chart(sourcesId, {
-		type: 'line',
-		options: {
-			plugins: {
-				title: {
-					text: 'Sources',
-				},
-				tooltip: {
-					callbacks: labelColor,
-				},
-			},
-			scales: {
-				x: {
-					type: 'time',
+	// var sourcesId = document.getElementById('sources').getContext('2d');
+	// const sourcesChart = new Chart(sourcesId, {
+	// 	type: 'line',
+	// 	options: {
+	// 		plugins: {
+	// 			title: {
+	// 				text: 'Sources',
+	// 			},
+	// 			tooltip: {
+	// 				callbacks: labelColor,
+	// 			},
+	// 		},
+	// 		scales: {
+	// 			x: {
+	// 				type: 'time',
 
-				},
-				y: {
-					ticks: {
-						precision: 0,
-					},
-				}
-			},
-		},
-	})
+	// 			},
+	// 			y: {
+	// 				ticks: {
+	// 					precision: 0,
+	// 				},
+	// 			}
+	// 		},
+	// 	},
+	// })
 
-	const charts = [listenerCountChart, listenerHoursChart, sourcesChart];
-
+	// const charts = [listenerCountChart, listenerHoursChart, sourcesChart];
+	const charts = [listenerCountChart, listenerHoursChart];
+	
 	function parseVerticalBarChartData(chart, json) {
 		var datasets = [];
 		var streams = Array.from(new Set(json.results.map(function (e) { return e['stream'] })));
@@ -483,23 +484,23 @@
 		});
 	}
 	
-	function getSources(data) {
-		$(sourcesChart.canvas).parent().siblings().fadeIn('fast')
-		$.get('/source/connections/', data, function (json) {
-			$.each(json.results, function (index, stream) {
-				json.results[index].borderColor = colours[index];
-				json.results[index].backgroundColor = colours[index] + 0.2 * 255;
-				json.results[index].fill = true;
-				json.results[index].stepped = 'before';
-			})
-			sourcesChart.data.datasets = json.results;
-			data = new URLSearchParams(data)
-			sourcesChart.options.scales.x.min = data.get('period_0');
-			sourcesChart.options.scales.x.max = data.get('period_1');
-			sourcesChart.update();
-			$(sourcesChart.canvas).parent().siblings().fadeOut('fast');
-		});
-	}
+	// function getSources(data) {
+	// 	$(sourcesChart.canvas).parent().siblings().fadeIn('fast')
+	// 	$.get('/source/connections/', data, function (json) {
+	// 		$.each(json.results, function (index, stream) {
+	// 			json.results[index].borderColor = colours[index];
+	// 			json.results[index].backgroundColor = colours[index] + 0.2 * 255;
+	// 			json.results[index].fill = true;
+	// 			json.results[index].stepped = 'before';
+	// 		})
+	// 		sourcesChart.data.datasets = json.results;
+	// 		data = new URLSearchParams(data)
+	// 		sourcesChart.options.scales.x.min = data.get('period_0');
+	// 		sourcesChart.options.scales.x.max = data.get('period_1');
+	// 		sourcesChart.update();
+	// 		$(sourcesChart.canvas).parent().siblings().fadeOut('fast');
+	// 	});
+	// }
 
 	function updateTitle(chart) {
 		var total = 0;
@@ -547,7 +548,7 @@
 		getBrowsers(params);
 		getCountries(params);
 		getReferers(params);
-		getSources(params);
+		// getSources(params);
 	}
 
 	function timeSlotsPopulated() {
