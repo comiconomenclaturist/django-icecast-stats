@@ -12,7 +12,7 @@ django-rest-framework==0.1.0
 djangorestframework==3.13.1
 docutils==0.15.2
 geoip2==2.9.0
-idna==2.10
+idna==3.7
 isort==5.7.0
 jmespath==0.9.4
 lazy-object-proxy==1.4.3
