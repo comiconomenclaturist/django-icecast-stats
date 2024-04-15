@@ -25,7 +25,7 @@ pytz==2020.1
 requests==2.31.0
 s3transfer==0.5.0
 six==1.15.0
-sqlparse==0.4.4
+sqlparse==0.5.0
 toml==0.10.2
 typed-ast==1.5.4
 typing-extensions==3.10.0.0
